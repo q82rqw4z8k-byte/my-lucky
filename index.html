@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>幸运大转盘</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #0f0f0f;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    padding: 20px;
+  }
+
+  .title-area {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+
+  .title-area h1 {
+    font-size: 26px;
+    font-weight: 700;
+    background: linear-gradient(90deg, #f5a623, #f7c948, #f5a623);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+  }
+
+  .tip {
+    font-size: 13px;
+    color: #888;
+    line-height: 1.8;
+  }
+
+  .tip span {
+    color: #f5a623;
+  }
+
+  /* UID 区域 */
+  .uid-section {
+    width: 100%;
+    max-width: 420px;
+    margin-bottom: 12px;
+  }
+
+  .uid-input-card {
+    background: #1a1a1a;
+    border: 2px solid #f5a623;
+    border-radius: 16px;
+    padding: 18px 16px;
+    box-shadow: 0 0 20px rgba(245,166,35,0.2);
+  }
+
+  .uid-input-label {
+    font-size: 13px;
+    color: #aaa;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .uid-input-label span { color: #f5a623; font-weight: 600; }
+
+  .uid-input-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .uid-input {
+    flex: 1;
+    background: #111;
+    border: 1.5px solid #333;
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: #fff;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+    font-family: inherit;
+  }
+
+  .uid-input:focus { border-color: #f5a623; }
+  .uid-input::placeholder { color: #444; font-size: 13px; }
+
+  .uid-confirm-btn {
+    background: linear-gradient(135deg, #f5a623, #f7c948);
+    color: #1a1a1a;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.2s;
+  }
+
+  .uid-confirm-btn:hover { opacity: 0.85; }
+
+  .uid-confirmed-card {
+    background: #111;
+    border: 1.5px solid #2a2a2a;
+    border-radius: 16px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .uid-confirmed-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .uid-confirmed-icon { font-size: 18px; }
+
+  .uid-confirmed-info {}
+
+  .uid-confirmed-label {
+    font-size: 11px;
+    color: #666;
+  }
+
+  .uid-confirmed-value {
+    font-size: 15px;
+    font-weight: 700;
+    color: #f5a623;
+    letter-spacing: 1px;
+    word-break: break-all;
+  }
+
+  .uid-change-btn {
+    color: #555;
+    font-size: 12px;
+    cursor: pointer;
+    background: none;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 4px 10px;
+    transition: all 0.2s;
+  }
+
+  .uid-change-btn:hover { color: #f5a623; border-color: #f5a623; }
+
+  /* 主容器 */
+  .lottery-container {
+    background: #1a1a1a;
+    border: 2px solid #f5a623;
+    border-radius: 20px;
+    padding: 16px;
+    box-shadow: 0 0 30px rgba(245, 166, 35, 0.3), inset 0 0 20px rgba(0,0,0,0.5);
+    width: 100%;
+    max-width: 420px;
+  }
+
+  /* 九宫格 */
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+
+  .cell {
+    background: #222;
+    border-radius: 12px;
+    border: 1.5px solid #333;
+    padding: 18px 10px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 110px;
+    position: relative;
+    transition: all 0.15s ease;
+    cursor: default;
+  }
+
+  .cell.highlight {
+    background: linear-gradient(135deg, #3d2800, #5a3c00);
+    border-color: #f5a623;
+    box-shadow: 0 0 15px rgba(245, 166, 35, 0.5);
+  }
+
+  .cell.winner {
+    background: linear-gradient(135deg, #f5a623, #f7c948);
+    border-color: #fff;
+    animation: winnerPulse 0.4s ease;
+  }
+
+  .cell.winner .prize-name {
+    color: #1a1a1a;
+  }
+
+  @keyframes winnerPulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+    100% { transform: scale(1); }
+  }
+
+  .cell-emoji {
+    font-size: 30px;
+    margin-bottom: 8px;
+    line-height: 1;
+  }
+
+  .prize-name {
+    font-size: 13px;
+    color: #e0e0e0;
+    text-align: center;
+    font-weight: 500;
+    line-height: 1.3;
+  }
+
+  .rare-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background: #e53935;
+    color: #fff;
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  /* GO 按钮 */
+  .go-btn {
+    background: linear-gradient(135deg, #f5a623, #f7c948);
+    border-radius: 12px;
+    border: 1.5px solid #f7c948;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 110px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .go-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(245,166,35,0.1), transparent);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .go-btn:hover::before { opacity: 1; }
+
+  .go-btn:active { transform: scale(0.96); }
+
+  .go-btn.disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .go-text {
+    font-size: 32px;
+    font-weight: 800;
+    color: #1a1a1a;
+    letter-spacing: 2px;
+  }
+
+  .go-sub {
+    font-size: 11px;
+    color: #5a3c00;
+    margin-top: 4px;
+  }
+
+  /* 底部信息 */
+  .bottom-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 16px;
+    padding: 0 4px;
+  }
+
+  .count-area {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #222;
+    border-radius: 30px;
+    padding: 8px 18px;
+    border: 1px solid #333;
+  }
+
+  .count-icon { font-size: 20px; }
+
+  .count-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: #f5a623;
+    min-width: 28px;
+    text-align: center;
+  }
+
+  .count-label {
+    font-size: 13px;
+    color: #888;
+  }
+
+  .add-btn {
+    background: linear-gradient(135deg, #f5a623, #f7c948);
+    color: #1a1a1a;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .add-btn:hover { opacity: 0.85; }
+
+  .record-link {
+    color: #f5a623;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    text-decoration: none;
+  }
+
+  .record-link:hover { opacity: 0.8; }
+
+  /* 结果弹窗 */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .modal-overlay.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: linear-gradient(160deg, #2a1800, #1a1a1a);
+    border: 2px solid #f5a623;
+    border-radius: 20px;
+    padding: 32px 28px;
+    text-align: center;
+    max-width: 300px;
+    width: 90%;
+    box-shadow: 0 0 40px rgba(245, 166, 35, 0.4);
+    transform: scale(0.8);
+    transition: transform 0.3s;
+  }
+
+  .modal-overlay.show .modal {
+    transform: scale(1);
+  }
+
+  .modal-emoji { font-size: 56px; margin-bottom: 12px; }
+
+  .modal-title {
+    font-size: 15px;
+    color: #aaa;
+    margin-bottom: 8px;
+  }
+
+  .modal-prize {
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(90deg, #f5a623, #f7c948);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 6px;
+  }
+
+  .modal-desc {
+    font-size: 13px;
+    color: #777;
+    margin-bottom: 24px;
+  }
+
+  .modal-close {
+    background: linear-gradient(135deg, #f5a623, #f7c948);
+    color: #1a1a1a;
+    border: none;
+    border-radius: 30px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+    transition: opacity 0.2s;
+    white-space: nowrap;
+  }
+
+  .modal-close:hover { opacity: 0.85; }
+
+  .modal-points-box {
+    background: #111;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    text-align: left;
+  }
+
+  .modal-points-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .modal-points-label { font-size: 13px; color: #888; }
+  .modal-points-val   { font-size: 13px; font-weight: 700; color: #f7c948; }
+
+  .modal-points-track {
+    height: 4px;
+    background: #2a2a2a;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .modal-points-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f7c948, #f5a623);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  /* 抽奖记录面板 */
+  .records-panel {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+
+  .records-panel.show {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .records-sheet {
+    background: #1a1a1a;
+    border-top: 2px solid #f5a623;
+    border-radius: 20px 20px 0 0;
+    width: 100%;
+    max-width: 460px;
+    padding: 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+    transform: translateY(100%);
+    transition: transform 0.3s;
+  }
+
+  .records-panel.show .records-sheet {
+    transform: translateY(0);
+  }
+
+  .records-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .records-header h3 {
+    color: #f5a623;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .close-x {
+    color: #666;
+    font-size: 22px;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .record-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #2a2a2a;
+  }
+
+  .record-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .record-emoji { font-size: 22px; }
+
+  .record-name {
+    font-size: 14px;
+    color: #e0e0e0;
+    font-weight: 500;
+  }
+
+  .record-time {
+    font-size: 12px;
+    color: #555;
+  }
+
+  .no-record {
+    text-align: center;
+    color: #555;
+    padding: 30px 0;
+    font-size: 14px;
+  }
+
+  /* 积分区域 */
+  .points-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #1e1a0e;
+    border: 1px solid #3d3000;
+    border-radius: 12px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+  }
+
+  .points-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .points-icon { font-size: 18px; }
+
+  .points-info {}
+
+  .points-num {
+    font-size: 18px;
+    font-weight: 700;
+    color: #f7c948;
+  }
+
+  .points-label {
+    font-size: 11px;
+    color: #888;
+    margin-left: 4px;
+  }
+
+  .points-hint {
+    font-size: 11px;
+    color: #666;
+    margin-top: 2px;
+  }
+
+  .redeem-btn {
+    background: linear-gradient(135deg, #f7c948, #f5a623);
+    color: #1a1a1a;
+    border: none;
+    border-radius: 16px;
+    padding: 7px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .redeem-btn:hover { opacity: 0.85; transform: scale(1.02); }
+
+  .redeem-btn.locked {
+    background: #2a2a2a;
+    color: #555;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .redeem-btn.locked:hover { opacity: 1; }
+
+  .points-progress {
+    height: 3px;
+    background: #2a2400;
+    border-radius: 2px;
+    margin-top: 4px;
+    overflow: hidden;
+    width: 80px;
+  }
+
+  .points-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f7c948, #f5a623);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+  }
+
+  /* 预算进度条 */
+  .budget-bar-wrap {
+    margin-bottom: 14px;
+  }
+
+  .budget-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .budget-label {
+    font-size: 12px;
+    color: #888;
+  }
+
+  .budget-nums {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .budget-spent { color: #f5a623; }
+  .budget-sep { color: #555; margin: 0 2px; }
+  .budget-total { color: #666; }
+
+  .budget-track {
+    height: 6px;
+    background: #2a2a2a;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .budget-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #f5a623, #f7c948);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+  }
+
+  .budget-fill.danger { background: linear-gradient(90deg, #e53935, #ff6b6b); }
+
+  .budget-exhausted {
+    text-align: center;
+    padding: 20px;
+    color: #e53935;
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  /* 礼花 */
+  .confetti {
+    position: fixed;
+    pointer-events: none;
+    z-index: 200;
+    top: 0; left: 0; right: 0; bottom: 0;
+  }
+
+  .confetti-piece {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+    animation: confettiFall linear forwards;
+  }
+
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+
+  @keyframes confettiFall {
+    0% { transform: translateY(-10px) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<div class="title-area">
+  <h1>🎰 幸运抽奖</h1>
+</div>
+
+<!-- UID 区域 -->
+<div class="uid-section" id="uidSection">
+  <!-- 由 JS 渲染 -->
+</div>
+
+<div class="lottery-container">
+
+  <div class="grid" id="grid">
+    <!-- 格子由 JS 生成 -->
+  </div>
+
+  <div class="bottom-bar">
+    <a class="record-link" onclick="showRecords()">抽奖记录 ›</a>
+    <a id="testResetBtn" onclick="testReset()" style="display:none;color:#444;font-size:12px;cursor:pointer;text-decoration:none;padding:4px 8px;border-radius:6px;border:1px solid #2a2a2a;">🔧 重置</a>
+  </div>
+</div>
+
+<!-- 结果弹窗 -->
+<div class="modal-overlay" id="resultModal">
+  <div class="modal">
+    <div class="modal-emoji" id="modalEmoji">🎁</div>
+    <div class="modal-title">恭喜获得</div>
+    <div class="modal-prize" id="modalPrize">奖项</div>
+    <div class="modal-desc" id="modalDesc">奖励将自动发放至您的账户</div>
+    <!-- 积分进度（仅积分奖项时显示） -->
+    <div class="modal-points-box" id="modalPointsBox" style="display:none;">
+      <div class="modal-points-row">
+        <span class="modal-points-label">⭐ 累计积分</span>
+        <span class="modal-points-val" id="modalPointsVal">0 / 30</span>
+      </div>
+      <div class="modal-points-track">
+        <div class="modal-points-fill" id="modalPointsFill" style="width:0%"></div>
+      </div>
+      <button class="redeem-btn locked" id="modalRedeemBtn" onclick="redeemFromModal()" style="margin-top:10px;width:100%;">
+        兑换 0.2U
+      </button>
+    </div>
+    <button class="modal-close" id="modalCloseBtn" onclick="closeModal()">📸 截图，分享至群内领取</button>
+  </div>
+</div>
+
+<!-- 每日限制弹窗 -->
+<div class="modal-overlay" id="dailyLimitModal">
+  <div class="modal">
+    <div class="modal-emoji">⏰</div>
+    <div class="modal-title">今日已参与抽奖</div>
+    <div class="modal-prize" style="font-size:18px;" id="dailyLimitUID"></div>
+    <div class="modal-desc">每个 UID 每天仅限抽奖一次<br>明天 0 点后即可再次参与</div>
+    <button class="modal-close" onclick="document.getElementById('dailyLimitModal').classList.remove('show')">知道了</button>
+  </div>
+</div>
+
+<!-- 记录面板 -->
+<div class="records-panel" id="recordsPanel">
+  <div class="records-sheet">
+    <div class="records-header">
+      <h3>抽奖记录</h3>
+      <span class="close-x" onclick="closeRecords()">×</span>
+    </div>
+    <div id="recordsList"></div>
+  </div>
+</div>
+
+<!-- 礼花容器 -->
+<div class="confetti" id="confetti"></div>
+
+<script>
+// ====== Lark 通知 ======
+const LARK_WEBHOOK = 'https://open.larksuite.com/open-apis/bot/v2/hook/9ee25b15-7418-40dc-a44f-03949aa636f5';
+
+function sendLarkNotification(prize, uid, group, pts) {
+  const now = new Date();
+  const timeStr = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')} `
+    + `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+  const payload = {
+    msg_type: 'interactive',
+    card: {
+      header: { title: { tag: 'plain_text', content: '🎰 中奖播报' }, template: 'yellow' },
+      elements: [
+        { tag: 'div', fields: [
+          { is_short: true, text: { tag: 'lark_md', content: `**社群**\n${group}` } },
+          { is_short: true, text: { tag: 'lark_md', content: `**用户 UID**\n${uid}` } }
+        ]},
+        { tag: 'div', fields: [
+          { is_short: true, text: { tag: 'lark_md', content: `**抽奖奖励**\n${prize.name}` } },
+          { is_short: true, text: { tag: 'lark_md', content: `**当前积分**\n${pts}` } }
+        ]},
+        { tag: 'div', fields: [
+          { is_short: true, text: { tag: 'lark_md', content: `**活动编号**\nACT-2026-06-001` } },
+          { is_short: true, text: { tag: 'lark_md', content: `**时间**\n${timeStr}` } }
+        ]}
+      ]
+    }
+  };
+  fetch(LARK_WEBHOOK, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload),
+    mode: 'no-cors'
+  }).catch(e => console.warn('Lark notification failed:', e));
+}
+
+// ====== 预算配置 ======
+const TOTAL_BUDGET = 100;
+let budgetSpent = 0;
+
+// ====== 积分系统 ======
+const POINTS_PER_REDEEM = 30;       // 多少积分可兑换
+const REDEEM_VALUE = 0.2;           // 兑换价值（U）
+let totalPoints = 0;
+
+// ====== 奖项配置 ======
+// value: 用于预算扣除；points: 赢得的积分数
+// 期望值 ≈ 0.1U/次，100U 约支撑 1000 次抽奖
+const prizes = [
+  { id: 0, emoji: '⭐', name: '10 积分',    desc: '累计30积分可兑换0.2U',  rare: false, weight: 886, value: 0.0667, points: 10  },
+  { id: 1, emoji: '💰', name: '0.1 USDT',    desc: 'USDT 奖励',         rare: false, weight: 65,  value: 0.1,    points: 0   },
+  { id: 2, emoji: '💰', name: '0.3 USDT',    desc: 'USDT 奖励',         rare: false, weight: 30,  value: 0.3,    points: 0   },
+  { id: 3, emoji: '💰', name: '1 USDT',       desc: 'USDT 奖励',         rare: false, weight: 2,   value: 1.0,    points: 0   },
+  { id: 4, emoji: '🎁', name: '4U 体验金',   desc: '交易体验金奖励',        rare: true,  weight: 1,   value: 4.0,    points: 0   },
+  { id: 5, emoji: '🎁', name: '2U 体验金',   desc: '交易体验金奖励',        rare: false, weight: 30,  value: 2.0,    points: 0   },
+  { id: 6, emoji: '🎫', name: '1U 返佣卡',   desc: '1USDT手续费返佣卡',     rare: false, weight: 8,   value: 1.0,    points: 0   },
+  { id: 7, emoji: '💰', name: '0.5 USDT',    desc: 'USDT 奖励',         rare: false, weight: 1,   value: 0.5,    points: 0   },
+];
+// EV ≈ (916×0.0667+40×0.2+20×0.5+12×1+1×4+2×2+8×0.333+1×2)/1000
+//    ≈ (61.1+8+10+12+4+4+2.66+2)/1000 = 103.76/1000 ≈ 0.104U/次
+// 配合 100U 硬停，实际支撑约 960~1000 次
+
+// 九宫格布局（位置0-8，4号=GO）:
+// [10积分] [0.1~0.3U] [0.4~0.6U]
+// [4U体验金] [  GO  ] [2U体验金]
+// [1 USDT ] [50 积分] [2 USDT  ]
+const cellPrizes = [
+  prizes[0], prizes[1], prizes[2],
+  prizes[4], null,       prizes[5],
+  prizes[3], prizes[6], prizes[7],
+];
+
+const order = [0, 1, 2, 4, 6, 7, 5, 3];
+
+// 转盘顺序（顺时针绕圈，位置索引）
+const spinOrder = [0, 1, 2, 5, 8, 7, 6, 3]; // 顺时针8个格子的位置索引
+
+let drawCount = 0;
+let isSpinning = false;
+// 从 localStorage 恢复历史记录
+let records = (() => { try { return JSON.parse(localStorage.getItem('lottery_records') || '[]'); } catch(e) { return []; } })();
+
+// ====== 库存系统 ======
+function getStock(prizeId) {
+  const p = prizes.find(p => p.id === prizeId);
+  if (!p || p.stock === undefined) return Infinity;
+  const saved = localStorage.getItem(`lottery_stock_${prizeId}`);
+  return saved !== null ? parseInt(saved) : p.stock;
+}
+function decrementStock(prizeId) {
+  const cur = getStock(prizeId);
+  if (cur !== Infinity) localStorage.setItem(`lottery_stock_${prizeId}`, Math.max(0, cur - 1));
+}
+function isStockAvailable(prizeId) {
+  return getStock(prizeId) > 0;
+}
+
+// ====== 初始化格子 ======
+function initGrid() {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  for (let i = 0; i < 9; i++) {
+    if (i === 4) {
+      // GO 按钮
+      const btn = document.createElement('div');
+      btn.className = 'go-btn';
+      btn.id = 'go-btn';
+      btn.onclick = startDraw;
+      btn.innerHTML = `<span class="go-text">GO</span><span class="go-sub">点击抽奖</span>`;
+      grid.appendChild(btn);
+    } else {
+      const prize = cellPrizes[i];
+      const cell = document.createElement('div');
+      cell.className = 'cell';
+      cell.id = `cell-${i}`;
+      cell.innerHTML = `
+        ${prize.rare ? '<span class="rare-badge">稀有</span>' : ''}
+        <div class="cell-emoji">${prize.emoji}</div>
+        <div class="prize-name">${prize.name}</div>
+      `;
+      if (TEST_MODE && prize.points === 0) {
+        cell.style.cursor = 'pointer';
+        cell.onclick = () => { showResult(prize); };
+      }
+      grid.appendChild(cell);
+    }
+  }
+}
+
+// ====== 加权随机 ======
+function weightedRandom() {
+  const pool = TEST_MODE ? prizes.filter(p => p.points === 0) : prizes;
+  const total = pool.reduce((s, p) => s + p.weight, 0);
+  let r = Math.random() * total;
+  for (const p of pool) {
+    r -= p.weight;
+    if (r <= 0) return p;
+  }
+  return pool[0];
+}
+
+// ====== 找出奖项在spinOrder中的位置 ======
+function findSpinIndex(prizeId) {
+  // cellPrizes 中找到位置，再找在 spinOrder 中
+  for (let si = 0; si < spinOrder.length; si++) {
+    const pos = spinOrder[si];
+    if (cellPrizes[pos] && cellPrizes[pos].id === prizeId) return si;
+  }
+  return 0;
+}
+
+// ====== 预算更新 ======
+function updateBudget(addValue) {
+  budgetSpent = Math.min(budgetSpent + addValue, TOTAL_BUDGET);
+  // 预算耗尽
+  if (budgetSpent >= TOTAL_BUDGET) {
+    const goBtn = document.getElementById('go-btn');
+    if (goBtn) {
+      goBtn.innerHTML = `<span class="go-text" style="font-size:18px;color:#e53935">已结束</span><span class="go-sub">预算已用完</span>`;
+      goBtn.classList.add('disabled');
+      goBtn.onclick = null;
+    }
+  }
+}
+
+// ====== 每日限制 ======
+function todayStr() {
+  const d = new Date();
+  return `${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`;
+}
+
+const TEST_MODE = new URLSearchParams(location.search).get('test') === '1';
+
+function hasDrawnToday(uid) {
+  if (TEST_MODE) return false;
+  return localStorage.getItem(`lottery_drawn_${uid}`) === todayStr();
+}
+
+function markDrawnToday(uid) {
+  if (TEST_MODE) return;
+  localStorage.setItem(`lottery_drawn_${uid}`, todayStr());
+}
+
+function lockGOButton() {
+  const btn = document.getElementById('go-btn');
+  if (!btn) return;
+  btn.style.background = 'linear-gradient(135deg, #2a2a2a, #333)';
+  btn.style.border = '1.5px solid #444';
+  btn.style.cursor = 'not-allowed';
+  btn.style.opacity = '0.5';
+  btn.innerHTML = `<span class="go-text" style="color:#666;">GO</span><span class="go-sub" style="color:#555;">今日已抽奖</span>`;
+  btn.onclick = showDailyLimitModal;
+}
+
+// ====== 开始抽奖 ======
+function startDraw() {
+  if (isSpinning) return;
+  if (!currentUID || !currentGroup) {
+    const section = document.getElementById('uidSection');
+    section.style.animation = 'none';
+    section.offsetHeight;
+    section.style.animation = 'shake 0.4s ease';
+    renderUID();
+    setTimeout(() => { const el = document.getElementById('uidInput'); if(el) el.focus(); }, 100);
+    return;
+  }
+  if (hasDrawnToday(currentUID)) {
+    showDailyLimitModal();
+    return;
+  }
+  if (budgetSpent >= TOTAL_BUDGET) {
+    alert('活动预算已用完，抽奖活动结束！');
+    return;
+  }
+  isSpinning = true;
+
+  const goBtn = document.getElementById('go-btn');
+  goBtn.classList.add('disabled');
+
+  const winner = weightedRandom();
+  const targetSi = findSpinIndex(winner.id);
+
+  // 动画：快转3圈 + 慢停到目标
+  const totalRounds = 3;
+  const totalSteps = totalRounds * 8 + targetSi + 1;
+
+  let step = 0;
+  let delay = 60;
+
+  function doStep() {
+    // 清除所有高亮
+    spinOrder.forEach(pos => {
+      const cell = document.getElementById(`cell-${pos}`);
+      if (cell) cell.classList.remove('highlight');
+    });
+
+    const curPos = spinOrder[step % 8];
+    const cell = document.getElementById(`cell-${curPos}`);
+    if (cell) cell.classList.add('highlight');
+
+    step++;
+    if (step < totalSteps) {
+      // 加速度：前半段快，后段慢
+      const progress = step / totalSteps;
+      if (progress < 0.5) delay = 60;
+      else if (progress < 0.7) delay = 80;
+      else if (progress < 0.85) delay = 120;
+      else delay = 180 + (step - Math.floor(totalSteps * 0.85)) * 20;
+      setTimeout(doStep, Math.min(delay, 300));
+    } else {
+      // 停止
+      setTimeout(() => {
+        spinOrder.forEach(pos => {
+          const cell = document.getElementById(`cell-${pos}`);
+          if (cell) cell.classList.remove('highlight');
+        });
+        const winPos = spinOrder[targetSi];
+        const winCell = document.getElementById(`cell-${winPos}`);
+        if (winCell) winCell.classList.add('winner');
+
+        setTimeout(() => {
+          if (winCell) winCell.classList.remove('winner');
+          markDrawnToday(currentUID);
+          showResult(winner);
+          lockGOButton();
+          isSpinning = false;
+        }, 800);
+      }, 300);
+    }
+  }
+  doStep();
+}
+
+// ====== 显示结果 ======
+function showResult(prize) {
+  document.getElementById('modalEmoji').textContent = prize.emoji;
+  document.getElementById('modalPrize').textContent = prize.name;
+  document.getElementById('modalDesc').textContent = prize.desc;
+
+  // 扣除预算
+  updateBudget(prize.value);
+
+  // 积分逻辑
+  if (prize.points > 0) {
+    totalPoints += prize.points;
+    updatePoints();
+    document.getElementById('modalPointsBox').style.display = 'block';
+  } else {
+    document.getElementById('modalPointsBox').style.display = 'none';
+  }
+
+  document.getElementById('resultModal').classList.add('show');
+
+  // 记录（含日期，持久化到 localStorage）
+  const now = new Date();
+  const dateStr = `${now.getMonth()+1}/${now.getDate()}`;
+  const timeStr = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  records.unshift({ emoji: prize.emoji, name: prize.name, value: prize.value, points: prize.points, date: dateStr, time: timeStr });
+  try { localStorage.setItem('lottery_records', JSON.stringify(records.slice(0, 500))); } catch(e) {}
+
+  // Lark 中奖通知（非测试模式）
+  if (!TEST_MODE && currentUID && currentGroup) {
+    sendLarkNotification(prize, currentUID, currentGroup, totalPoints);
+  }
+
+  if (prize.rare) launchConfetti();
+}
+
+// ====== 积分更新 ======
+function updatePoints() {
+  // 更新弹窗内积分显示
+  const cur = totalPoints % POINTS_PER_REDEEM || (totalPoints >= POINTS_PER_REDEEM ? POINTS_PER_REDEEM : 0);
+  const pct = Math.min(totalPoints / POINTS_PER_REDEEM * 100, 100);
+  const times = Math.floor(totalPoints / POINTS_PER_REDEEM);
+
+  const valEl  = document.getElementById('modalPointsVal');
+  const fillEl = document.getElementById('modalPointsFill');
+  const btn    = document.getElementById('modalRedeemBtn');
+  if (valEl)  valEl.textContent = `${totalPoints} / ${POINTS_PER_REDEEM}`;
+  if (fillEl) fillEl.style.width = Math.min((totalPoints % POINTS_PER_REDEEM) / POINTS_PER_REDEEM * 100, 100) + '%';
+  if (btn) {
+    if (times >= 1) {
+      btn.classList.remove('locked');
+      btn.textContent = times > 1 ? `兑换 ${times}×0.2U` : '兑换 0.2U';
+    } else {
+      btn.classList.add('locked');
+      btn.textContent = '兑换 0.2U';
+    }
+  }
+}
+
+// ====== 积分兑换（从弹窗触发） ======
+function redeemFromModal() {
+  const times = Math.floor(totalPoints / POINTS_PER_REDEEM);
+  if (times < 1) return;
+  const earned = (times * REDEEM_VALUE).toFixed(2);
+  totalPoints -= times * POINTS_PER_REDEEM;
+  updateBudget(times * REDEEM_VALUE);
+  // 切换弹窗内容为兑换成功
+  document.getElementById('modalEmoji').textContent = '🎉';
+  document.getElementById('modalPrize').textContent = `+${earned} USDT`;
+  document.getElementById('modalDesc').textContent  = `消耗 ${times * POINTS_PER_REDEEM} 积分，兑换成功！`;
+  document.getElementById('modalPointsBox').style.display = 'none';
+  updatePoints();
+  launchConfetti();
+}
+
+function closeModal() {
+  document.getElementById('resultModal').classList.remove('show');
+}
+
+function showDailyLimitModal() {
+  document.getElementById('dailyLimitUID').textContent = `UID: ${currentUID}`;
+  document.getElementById('dailyLimitModal').classList.add('show');
+}
+
+// ====== 记录 ======
+// ====== 测试重置 ======
+function testReset() {
+  // 清除所有每日限制记录
+  Object.keys(localStorage).forEach(k => {
+    if (k.startsWith('lottery_drawn_')) localStorage.removeItem(k);
+  });
+  // 重置预算和积分
+  budgetSpent = 0;
+  totalPoints = 0;
+  records = [];
+  localStorage.removeItem('lottery_records');
+  isSpinning = false;
+  // 重新渲染GO按钮
+  initGrid();
+  alert('✅ 测试重置完成：每日限制已清除，GO 按钮已恢复');
+}
+
+function showRecords() {
+  const list = document.getElementById('recordsList');
+  if (records.length === 0) {
+    list.innerHTML = '<div class="no-record">暂无抽奖记录</div>';
+  } else {
+    const totalPaid = records.reduce((s, r) => s + r.value, 0);
+
+    // 各奖项统计
+    const countMap = {};
+    records.forEach(r => {
+      if (!countMap[r.name]) countMap[r.name] = { emoji: r.emoji, count: 0 };
+      countMap[r.name].count++;
+    });
+    const statsHtml = Object.entries(countMap)
+      .sort((a, b) => b[1].count - a[1].count)
+      .map(([name, v]) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1e1e1e;">
+          <span style="font-size:13px;color:#ccc;">${v.emoji} ${name}</span>
+          <span style="font-size:13px;font-weight:700;color:#f5a623;">${v.count} 次</span>
+        </div>
+      `).join('');
+
+    list.innerHTML = `
+      <div style="font-size:12px;color:#666;margin-bottom:6px;">抽奖明细</div>
+    ` + records.map(r => `
+      <div class="record-item">
+        <div class="record-left">
+          <span class="record-emoji">${r.emoji}</span>
+          <span class="record-name">${r.name}</span>
+        </div>
+        <div style="text-align:right;">
+          <div style="color:#f5a623;font-size:12px;font-weight:600;">${r.points > 0 ? `+${r.points}积分` : `${r.value}U`}</div>
+          <div class="record-time">${r.date ? r.date + ' ' : ''}${r.time}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+  document.getElementById('recordsPanel').classList.add('show');
+}
+
+function closeRecords() {
+  document.getElementById('recordsPanel').classList.remove('show');
+}
+
+// ====== 增加次数 ======
+function addCount() {
+  if (budgetSpent >= TOTAL_BUDGET) {
+    alert('活动预算已用完，无法增加次数！');
+    return;
+  }
+  drawCount += 3;
+  updateCount();
+}
+
+function updateCount() {
+  const el = document.getElementById('countNum');
+  if (el) el.textContent = drawCount;
+}
+
+// ====== 礼花 ======
+function launchConfetti() {
+  const container = document.getElementById('confetti');
+  const colors = ['#f5a623', '#f7c948', '#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4'];
+  for (let i = 0; i < 60; i++) {
+    const piece = document.createElement('div');
+    piece.className = 'confetti-piece';
+    piece.style.left = Math.random() * 100 + 'vw';
+    piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+    piece.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+    piece.style.animationDelay = Math.random() * 0.5 + 's';
+    piece.style.width = (6 + Math.random() * 8) + 'px';
+    piece.style.height = (6 + Math.random() * 8) + 'px';
+    container.appendChild(piece);
+    setTimeout(() => piece.remove(), 4000);
+  }
+}
+
+// ====== 点击外部关闭弹窗 ======
+document.getElementById('resultModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+document.getElementById('recordsPanel').addEventListener('click', function(e) {
+  if (e.target === this) closeRecords();
+});
+
+// ====== UID + 群号系统 ======
+let currentUID   = localStorage.getItem('lottery_uid')   || '';
+let currentGroup = localStorage.getItem('lottery_group') || '';
+
+function renderUID() {
+  const section = document.getElementById('uidSection');
+  if (currentUID && currentGroup) {
+    // 已确认：显示摘要
+    section.innerHTML = `
+      <div class="uid-confirmed-card">
+        <div class="uid-confirmed-left">
+          <span class="uid-confirmed-icon">👤</span>
+          <div class="uid-confirmed-info">
+            <div class="uid-confirmed-label">UID</div>
+            <div class="uid-confirmed-value">${currentUID}</div>
+            <div class="uid-confirmed-label" style="margin-top:4px;">群号</div>
+            <div class="uid-confirmed-value">${currentGroup}</div>
+          </div>
+        </div>
+        <button class="uid-change-btn" onclick="resetUID()">修改</button>
+      </div>
+    `;
+  } else {
+    // 输入表单
+    section.innerHTML = `
+      <div class="uid-input-card">
+        <div class="uid-input-label">👤 填写信息参与抽奖</div>
+        <div style="font-size:11px;color:#666;margin-bottom:8px;">如何查找 UID：首页左上角图标 → 点击头像 → UID</div>
+        <div class="uid-input-row" style="margin-bottom:8px;">
+          <input class="uid-input" id="uidInput" type="text" inputmode="numeric" pattern="[0-9]*"
+            placeholder="UID（18~20 位数字）" maxlength="20"
+            value="${currentUID}"
+            onkeydown="if(event.key==='Enter') document.getElementById('groupInput').focus()">
+        </div>
+        <div class="uid-input-row">
+          <input class="uid-input" id="groupInput" type="text"
+            placeholder="群号" maxlength="30"
+            value="${currentGroup}"
+            onkeydown="if(event.key==='Enter') confirmUID()"
+            onblur="confirmUID()">
+        </div>
+      </div>
+    `;
+    setTimeout(() => {
+      const el = currentUID
+        ? document.getElementById('groupInput')
+        : document.getElementById('uidInput');
+      if (el) el.focus();
+    }, 50);
+  }
+}
+
+function confirmUID() {
+  const uidEl   = document.getElementById('uidInput');
+  const groupEl = document.getElementById('groupInput');
+  const uid     = uidEl   ? uidEl.value.trim()   : '';
+  const group   = groupEl ? groupEl.value.trim()  : '';
+
+  // 校验 UID
+  if (!/^\d{18,20}$/.test(uid)) {
+    uidEl.style.borderColor = '#e53935';
+    uidEl.value = '';
+    uidEl.placeholder = 'UID 为 18~20 位纯数字';
+    setTimeout(() => { uidEl.style.borderColor = '#333'; uidEl.placeholder = 'UID（18~20 位数字）'; }, 2000);
+    uidEl.focus();
+    return;
+  }
+  // 校验群号
+  if (!group) {
+    groupEl.style.borderColor = '#e53935';
+    groupEl.placeholder = '请输入群号';
+    setTimeout(() => { groupEl.style.borderColor = '#333'; groupEl.placeholder = '群号'; }, 2000);
+    groupEl.focus();
+    return;
+  }
+
+  currentUID   = uid;
+  currentGroup = group;
+  localStorage.setItem('lottery_uid',   uid);
+  localStorage.setItem('lottery_group', group);
+  renderUID();
+  if (hasDrawnToday(uid)) setTimeout(lockGOButton, 50);
+}
+
+function resetUID() {
+  currentUID   = '';
+  currentGroup = '';
+  localStorage.removeItem('lottery_uid');
+  localStorage.removeItem('lottery_group');
+  renderUID();
+}
+
+// ====== 初始化 ======
+renderUID();
+initGrid();
+// 测试模式显示重置按钮
+if (TEST_MODE) {
+  const btn = document.getElementById('testResetBtn');
+  if (btn) btn.style.display = 'inline';
+}
+// 如果今日已抽过，立即锁定按钮（测试模式跳过）
+if (!TEST_MODE && currentUID && hasDrawnToday(currentUID)) {
+  setTimeout(lockGOButton, 50);
+}
+</script>
+</body>
+</html>
