@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
+<title>合约晒单抽奖 · OKX</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#0d0d0d;color:#e0e0e0;font-family:-apple-system,'PingFang SC','Microsoft YaHei',sans-serif;min-height:100vh;display:flex;justify-content:center}
+.page{width:100%;max-width:420px;min-height:100vh;background:#0d0d0d;position:relative;overflow-x:hidden}
+.top-bg{position:absolute;top:0;left:0;right:0;height:220px;background:radial-gradient(ellipse at 50% -10%,#3d2800 0%,#1a1200 50%,transparent 80%);pointer-events:none}
+.sparkle{position:absolute;background:#ffd700;border-radius:50%;animation:twinkle var(--dur,2s) var(--delay,0s) ease-in-out infinite;pointer-events:none}
+@keyframes twinkle{0%,100%{opacity:.15;transform:scale(.6)}50%{opacity:.9;transform:scale(1.3)}}
+.grp-badge{position:absolute;top:14px;right:16px;z-index:10;background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.3);border-radius:20px;padding:3px 10px;font-size:11px;color:#ffd700}
+.header{padding:28px 24px 10px;text-align:center;position:relative;z-index:1}
+.header h1{font-size:26px;font-weight:900;color:#fff;line-height:1.3;text-shadow:0 2px 20px rgba(255,200,0,.4)}
+.header h1 em{color:#ffd700;font-style:normal}
+.banner{margin:6px 20px;border-radius:12px;padding:9px 16px;font-size:12px;text-align:center;position:relative;z-index:1;display:none}
+.bw{background:rgba(255,149,0,.08);border:1px solid rgba(255,149,0,.3);color:#ff9500}
+.bf{background:rgba(255,69,0,.08);border:1px solid rgba(255,69,0,.3);color:#ff6347}
+.spin-pill-row{margin:8px 20px;position:relative;z-index:1}
+.spin-pill{display:none;align-items:center;gap:6px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:20px;padding:5px 14px;font-size:12px;color:#10b981}
+.input-section{padding:0 20px 10px;position:relative;z-index:1;display:flex;flex-direction:column;gap:8px}
+.irow{background:rgba(255,255,255,.04);border:1px solid #2a2a2a;border-radius:14px;padding:12px 16px;display:flex;align-items:center;gap:10px}
+.irow label{font-size:12px;color:#666;white-space:nowrap;min-width:40px}
+.irow input{flex:1;background:transparent;border:none;outline:none;color:#ffd700;font-size:15px;font-weight:700;letter-spacing:.5px}
+.irow input::placeholder{color:#333;font-weight:400;font-size:13px;letter-spacing:0}
+.irow input.code-f{letter-spacing:6px;font-size:20px;color:#ff9500;text-align:center}
+.irow input.code-f::placeholder{letter-spacing:0;font-size:13px;text-align:left}
+.verify-btn{background:linear-gradient(135deg,#ffd700,#ff9500);border:none;border-radius:10px;padding:9px 16px;color:#1a0800;font-size:13px;font-weight:900;cursor:pointer;white-space:nowrap}
+.hint{font-size:11px;color:#3a3a3a;text-align:center;line-height:1.6}
+.hint em{color:#555;font-style:normal}
+.lottery-area{padding:0 16px;position:relative;z-index:1}
+.gw{position:relative;border-radius:20px;padding:2px;background:linear-gradient(135deg,#ffd700 0%,#ff6b00 50%,#ffd700 100%)}
+.gi{background:linear-gradient(150deg,#2a1e00,#1a1200);border-radius:18px;padding:13px}
+.lg{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.pc{background:rgba(0,0,0,.5);border:1.5px solid #2a2000;border-radius:11px;padding:10px 4px 8px;text-align:center;min-height:84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;position:relative;overflow:hidden;transition:background .08s,border-color .08s,box-shadow .08s}
+.pc.active{background:linear-gradient(135deg,#4d3200,#2e1e00);border-color:#ffd700;box-shadow:0 0 14px rgba(255,215,0,.55)}
+.pc.won{background:linear-gradient(135deg,#5a3800,#3d2500);border-color:#ff9500;box-shadow:0 0 22px rgba(255,130,0,.9);animation:cw .45s ease-in-out 4}
+@keyframes cw{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.pi{font-size:18px;line-height:1}
+.ti{width:24px;height:18px;background:linear-gradient(135deg,#3a3a3a,#2a2a2a);border-radius:4px;display:flex;align-items:center;justify-content:center;position:relative;border:1px solid #444}
+.ti::before,.ti::after{content:'';position:absolute;width:5px;height:5px;background:#1a1200;border-radius:50%;top:50%;transform:translateY(-50%)}
+.ti::before{left:-3px}.ti::after{right:-3px}
+.ti svg{width:11px;height:11px;fill:#aaa}
+.pc.active .ti,.pc.won .ti{background:linear-gradient(135deg,#5a4200,#3d2c00);border-color:#ffd700}
+.pc.active .ti svg,.pc.won .ti svg{fill:#ffd700}
+.pn{font-size:10.5px;color:#888;font-weight:500;line-height:1.2;white-space:normal;max-width:88px}
+.pc.active .pn,.pc.won .pn{color:#ffd700;font-weight:700}
+.rt{position:absolute;top:3px;right:3px;background:linear-gradient(135deg,#ff4000,#cc0000);color:#fff;font-size:8px;padding:1px 4px;border-radius:3px;font-weight:800}
+.go{background:linear-gradient(135deg,#ffe066,#ffb300 40%,#ff7700);border:none;border-radius:11px;min-height:84px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;transition:transform .1s;box-shadow:0 4px 20px rgba(255,150,0,.5)}
+.go:active:not(.gd){transform:scale(.94)}
+.go.gd{background:linear-gradient(135deg,#2a2a2a,#1a1a1a);cursor:not-allowed;box-shadow:none}
+.gt{font-size:25px;font-weight:900;color:#1a0800;letter-spacing:3px;position:relative;z-index:1}
+.go.gd .gt{color:#555}
+.gs{position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 40% 40%,rgba(255,255,255,.25) 0%,transparent 55%);animation:goS 2.2s ease-in-out infinite}
+.go.gd .gs{display:none}
+@keyframes goS{0%,100%{opacity:.4;transform:scale(.85)}50%{opacity:1;transform:scale(1.1)}}
+.bot{display:flex;align-items:center;justify-content:space-between;padding:11px 20px;position:relative;z-index:1}
+.scp{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.04);border:1px solid #2a2a2a;border-radius:22px;padding:7px 14px 7px 12px}
+.scp .ic{font-size:16px}.scp .nm{font-size:17px;font-weight:800;color:#ffd700;min-width:18px;text-align:center}.scp .lb{font-size:12px;color:#777}
+.rl{font-size:13px;color:#ffd700;cursor:pointer;text-decoration:underline;text-underline-offset:2px}
+.rules{padding:0 20px 32px;position:relative;z-index:1}
+.rules-box{background:rgba(255,255,255,.02);border:1px solid #1e1e1e;border-radius:14px;padding:15px}
+.rules-box h3{font-size:12px;color:#ffd700;margin-bottom:9px}
+.rules-box p{font-size:11px;color:#555;line-height:1.9}
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:500;align-items:center;justify-content:center}
+.ov.show{display:flex}
+@keyframes popIn{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.wb{background:linear-gradient(160deg,#1e1400,#0d0d0d);border:2px solid #ffd700;border-radius:26px;padding:32px 24px 26px;text-align:center;max-width:300px;width:88%;box-shadow:0 0 50px rgba(255,210,0,.25);animation:popIn .35s cubic-bezier(.34,1.56,.64,1)}
+.we{font-size:40px;margin-bottom:6px;line-height:1}
+.wt{font-size:15px;color:#aaa;margin-bottom:3px}
+.wp{font-size:28px;font-weight:900;color:#ffd700;margin:8px 0 5px;text-shadow:0 0 25px rgba(255,215,0,.7)}
+.wbg{display:inline-block;background:rgba(255,215,0,.12);border:1px solid rgba(255,215,0,.3);border-radius:20px;padding:3px 12px;font-size:11px;color:#ffd700;margin-bottom:14px}
+.wd{font-size:11px;color:#555;line-height:1.7;margin-bottom:20px}
+.wc{width:100%;background:linear-gradient(135deg,#ffd700,#ff9500);border:none;border-radius:13px;padding:13px;color:#1a0800;font-size:15px;font-weight:800;cursor:pointer}
+.spin-remain{font-size:11px;color:#ff9500;margin-bottom:12px}
+.plb{background:linear-gradient(160deg,#1e1400,#0d0d0d);border:2px solid #333;border-radius:26px;padding:32px 24px 26px;text-align:center;max-width:300px;width:88%;animation:popIn .35s cubic-bezier(.34,1.56,.64,1)}
+.pli{font-size:44px;margin-bottom:10px}.plt{font-size:17px;font-weight:800;color:#aaa;margin-bottom:6px}
+.plp{font-size:17px;font-weight:700;color:#ffd700;margin:6px 0 3px}
+.pld{font-size:11px;color:#555;line-height:1.7;margin-bottom:18px}
+.plc{width:100%;background:#1e1e1e;border:1px solid #333;border-radius:13px;padding:12px;color:#aaa;font-size:14px;font-weight:700;cursor:pointer}
+.sp{display:none;position:fixed;inset:0;background:#0d0d0d;z-index:400;flex-direction:column}
+.sp.show{display:flex}
+.sph{background:#111;padding:17px 20px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #1e1e1e}
+.sph h2{font-size:16px;color:#ffd700;flex:1}
+.bk{width:30px;height:30px;background:rgba(255,255,255,.06);border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#aaa;font-size:16px;border:1px solid #2a2a2a}
+.spb{flex:1;overflow-y:auto;padding:15px}
+.ri{background:rgba(255,255,255,.03);border:1px solid #1e1e1e;border-radius:12px;padding:12px 15px;margin-bottom:9px;display:flex;align-items:center;justify-content:space-between}
+.rp{font-size:14px;color:#ffd700;font-weight:700}.rpl{font-size:10px;color:#10b981;margin-top:2px}
+.rd{font-size:11px;color:#555;text-align:right}.rt2{font-size:10px;color:#3a3a3a;text-align:right;margin-top:2px}
+.et{text-align:center;color:#444;font-size:13px;padding:50px 20px}
+/* Admin */
+.ap{display:none;position:fixed;inset:0;background:#0a0a0a;z-index:600;flex-direction:column}
+.ap.show{display:flex}
+.aph{background:#111;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #2a2a2a;flex-wrap:wrap}
+.aph h2{font-size:15px;color:#ffd700;white-space:nowrap}
+.apb{flex:1;overflow-y:auto;padding:15px;max-width:960px;margin:0 auto;width:100%}
+.as{background:#111;border:1px solid #222;border-radius:14px;padding:14px;margin-bottom:12px}
+.as h3{font-size:13px;color:#ffd700;margin-bottom:10px}
+.bg4{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:10px}
+.bc{background:#0d0d0d;border:1px solid #1e1e1e;border-radius:10px;padding:11px 8px;text-align:center}
+.bv{font-size:18px;font-weight:800;color:#ffd700}.bl{font-size:10px;color:#555;margin-top:2px}
+.bwrap{background:#0d0d0d;border:1px solid #1e1e1e;border-radius:10px;padding:10px 13px;margin-bottom:8px}
+.btrack{height:7px;background:#1a1a1a;border-radius:4px;overflow:hidden;margin-top:6px}
+.bfill{height:100%;border-radius:4px;transition:width .4s;background:linear-gradient(90deg,#52c41a,#ffd700)}
+.bfill.over{background:linear-gradient(90deg,#ffd700,#ff4d4f)}
+.fob{display:none;background:#2a0808;border:1px solid rgba(255,77,79,.4);border-radius:8px;padding:8px 13px;font-size:12px;color:#ff7875;margin-bottom:8px}
+.sr{display:flex;gap:7px;margin-bottom:10px}
+.sr input{flex:1;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:8px;padding:9px 13px;color:#fff;font-size:13px;outline:none}
+.sr input::placeholder{color:#3a3a3a}
+.sr button{background:#ffd700;border:none;border-radius:8px;padding:9px 14px;color:#1a0800;font-weight:800;font-size:12px;cursor:pointer}
+.sr .clr{background:#1a1a1a;color:#888;border:1px solid #333}
+.ar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.ab{border-radius:8px;font-size:12px;padding:7px 14px;cursor:pointer;border:none;font-weight:600}
+.ab.g{background:#0d2a1a;border:1px solid rgba(82,196,26,.4)!important;color:#52c41a}
+.ab.b{background:#0d1a2e;border:1px solid rgba(24,144,255,.4)!important;color:#1890ff}
+.ab.y{background:#1a1a0a;border:1px solid rgba(250,173,20,.4)!important;color:#faad14}
+.ab.r{background:#1a0a0a;border:1px solid rgba(255,77,79,.4)!important;color:#ff4d4f}
+.uc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+.uc{background:rgba(255,215,0,.03);border:1px solid rgba(255,215,0,.12);border-radius:12px;padding:13px 15px}
+.uc-uid{font-size:13px;color:#ffd700;font-weight:bold;margin-bottom:2px}
+.uc-nick{font-size:11px;color:#b37feb;margin-bottom:2px}
+.uc-meta{font-size:11px;color:#555;margin-bottom:8px}
+.uc-rec{background:#0a0a0a;border-left:3px solid #52c41a;border-radius:4px;padding:7px 10px;margin-bottom:5px}
+.uc-rec.dep{border-left-color:#f59e0b}.uc-rec.sp2{border-left-color:#3b82f6}
+.uc-r1{display:flex;align-items:center;flex-wrap:wrap;gap:4px}
+.uc-prize{font-size:12px;color:#52c41a;font-weight:500}
+.uc-rec.dep .uc-prize{color:#f59e0b}.uc-rec.sp2 .uc-prize{color:#3b82f6}
+.uc-time{font-size:10px;color:#555;margin-left:auto}
+.uc-meta2{font-size:10px;color:#444;display:flex;gap:8px;margin-top:2px;flex-wrap:wrap}
+.uc-shot{max-width:100%;max-height:100px;border-radius:6px;margin-top:6px;cursor:pointer;display:block;object-fit:contain}
+.no-recs{text-align:center;color:#444;font-size:13px;padding:40px}
+.gsw{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+.gc{padding:3px 9px;border-radius:6px;font-size:11px;cursor:pointer;border:1px solid #333;background:#1e1e1e;color:#888;white-space:nowrap}
+.gc.a{background:#ffd700;color:#1a0800;border-color:transparent}
+.url-g{font-size:11px;line-height:2;font-family:monospace;background:#0d0d0d;border:1px solid #2a2a2a;border-radius:8px;padding:10px 12px;margin:8px 0;word-break:break-all;color:#555}
+.afoot{display:flex;gap:7px;padding:13px 15px;border-top:1px solid #1e1e1e;background:#0a0a0a}
+.afoot button{flex:1;padding:12px 6px;border-radius:9px;border:none;font-size:12px;font-weight:700;cursor:pointer}
+.bex{background:#ffd700;color:#1a0800}.brs{background:#1a2a0a;color:#52c41a;border:1px solid rgba(82,196,26,.3)!important}.bcl{background:#5a0000;color:#fff}
+.reg-tab{flex:1;text-align:center;padding:8px;border-radius:8px;font-size:12px;cursor:pointer;border:1px solid #333;background:#0d0d1a;color:#666}
+.reg-tab.active{background:rgba(179,126,235,.15);border-color:rgba(179,126,235,.5);color:#b37feb;font-weight:500}
+.reg-spin{border:1.5px solid #2a2a2a;border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;background:#0d0d1a;color:#555;transition:all .2s}
+.reg-spin.active{border-color:#10b981;background:rgba(16,185,129,.1);color:#10b981}
+.paste-zone{border:1.5px dashed #333;border-radius:8px;padding:10px;text-align:center;color:#555;font-size:12px;cursor:pointer;margin-bottom:12px;transition:border-color .2s;min-height:48px;display:flex;align-items:center;justify-content:center}
+.paste-zone:hover,.paste-zone:focus,.paste-zone.drag-over{border-color:#b37feb;color:#b37feb;outline:none}
+/* Sync by date */
+.sync-row{display:flex;align-items:center;gap:8px;padding:7px 11px;background:#0a0a0a;border:1px solid #1e1e1e;border-radius:8px;margin-bottom:4px;flex-wrap:wrap}
+.sync-dl{font-size:13px;color:#ffd700;font-weight:700;min-width:78px}
+.sync-dc{font-size:10px;color:#444}
+.sync-acts{display:flex;gap:5px;margin-left:auto;flex-wrap:wrap}
+.sb{padding:5px 11px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid;transition:opacity .15s;white-space:nowrap}
+.sb.su{background:rgba(82,196,26,.12);color:#52c41a;border-color:rgba(82,196,26,.3)}
+.sb.st{background:rgba(24,144,255,.12);color:#1890ff;border-color:rgba(24,144,255,.3)}
+.sb.sr2{background:rgba(179,126,235,.12);color:#b37feb;border-color:rgba(179,126,235,.3)}
+.sb:disabled{opacity:.22;cursor:not-allowed}
+.sb.copied{background:rgba(255,215,0,.1);color:#ffd700;border-color:rgba(255,215,0,.3)}
+.rc-btn{background:none;border:1px solid #252525;border-radius:4px;color:#3a3a3a;font-size:10px;padding:1px 5px;cursor:pointer;transition:all .15s;vertical-align:middle}
+.rc-btn:hover{border-color:#52c41a;color:#52c41a}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:rgba(20,20,20,.95);border:1px solid #333;border-radius:22px;padding:10px 20px;font-size:12px;color:#e0e0e0;z-index:9997;transition:transform .3s cubic-bezier(.34,1.3,.64,1);pointer-events:none;text-align:center;max-width:82%}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="page" id="userPage">
+  <div class="top-bg"></div>
+  <div class="sparkle" style="top:8%;left:5%;width:5px;height:5px;--dur:2.1s;--delay:0s"></div>
+  <div class="sparkle" style="top:12%;right:9%;width:4px;height:4px;--dur:1.7s;--delay:.4s"></div>
+  <div class="sparkle" style="top:20%;left:3%;width:3px;height:3px;--dur:2.6s;--delay:.8s"></div>
+  <div class="grp-badge" id="groupBadge">群 1</div>
+  <div class="header"><h1>合约晒单 <em>100%</em> 中奖！</h1></div>
+  <div class="banner bw" id="wBanner">🌙 今日（周末）不开奖，工作日继续晒单！</div>
+  <div class="banner bf" id="fBanner">⚠️ 本月奖池已达上限，奖励已切换为小额USDT</div>
+  <div class="spin-pill-row"><div class="spin-pill" id="spinPill">🎯 <span id="spinPillTxt">已授权 1 次抽奖</span></div></div>
+  <div class="input-section">
+    <div class="irow">
+      <label>UID</label>
+      <input type="tel" id="uidIn" placeholder="输入你的 OKX UID" maxlength="20" oninput="onUIDChange()"/>
+    </div>
+    <div class="irow">
+      <label>授权码</label>
+      <input type="tel" id="codeIn" class="code-f" placeholder="4位授权码" maxlength="4" oninput="onCodeInput()"/>
+      <button class="verify-btn" onclick="doVerify()">验 证</button>
+    </div>
+    <div class="hint">授权码由群主私信发放 · <em>UID首次输入后自动保存</em><br>UID查找：APP首页左上角图标 → 点击头像 → 复制UID</div>
+  </div>
+  <div class="lottery-area">
+    <div class="gw"><div class="gi"><div class="lg" id="grid"></div></div></div>
+  </div>
+  <div class="bot">
+    <div class="scp"><span class="ic">🎯</span><span class="nm" id="spinCnt">0</span><span class="lb">抽奖次数</span></div>
+    <div class="rl" onclick="showRec()">抽奖记录 ›</div>
+  </div>
+  <div class="rules">
+    <div class="rules-box">
+      <h3>📋 活动规则</h3>
+      <p>1. 收到授权码后随时可参与，无日期限制<br>2. 合约截图发至群内 → 群主审核 → 私信发放授权码<br>3. 输入UID + 授权码验证后即可参与抽奖<br>4. 每个授权码仅限使用1次，验证后立即生效<br>5. 所有奖励3-7个自然日内到账，可在APP《我的奖励》查询<br>6. 入金、现货奖励由系统随机发放<br>7. 活动截止时间以群主通知为准</p>
+    </div>
+  </div>
+</div>
+
+<!-- Win Modal -->
+<div class="ov" id="winOv">
+  <div class="wb">
+    <div class="we" id="winE">🎉</div>
+    <div class="wt">恭喜您中奖了！</div>
+    <div class="wp" id="winP">—</div>
+    <div class="wbg" id="winB">奖励</div>
+    <div class="wd" id="winD"></div>
+    <div class="spin-remain" id="spinRemain" style="display:none"></div>
+    <button class="wc" id="winBtn" onclick="closeWin()">太棒了，收下了！</button>
+  </div>
+</div>
+<div class="ov" id="playOv">
+  <div class="plb">
+    <div class="pli">🌙</div><div class="plt">今日已全部抽完！</div>
+    <div class="plp" id="playI"></div>
+    <div class="pld">继续晒单，群主审核后发放新授权码</div>
+    <button class="plc" onclick="closePlay()">好的，知道了！</button>
+  </div>
+</div>
+<div class="sp" id="recPanel">
+  <div class="sph"><div class="bk" onclick="hideRec()">←</div><h2>我的抽奖记录</h2></div>
+  <div class="spb" id="recBody"></div>
+</div>
+
+<!-- Admin -->
+<div class="ap" id="adminPanel">
+  <div class="aph">
+    <h2>管理员后台 · <span id="adminGrpLbl">群1</span></h2>
+    <div class="gsw" id="gSw"></div>
+  </div>
+  <div class="apb">
+    <!-- 群组链接 -->
+    <div class="as" style="background:#0a1020;border-color:#1e3a5a">
+      <h3 style="color:#1890ff">🔗 群组链接（当前：<span id="curGrpName">群1</span>）</h3>
+      <div class="url-g" id="urlG"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap" id="gBtns"></div>
+    </div>
+    <!-- 群名设置 -->
+    <div class="as" style="background:#080808;border-color:#1a1a1a">
+      <h3 style="color:#888">⚙️ 群名设置（点击直接编辑）</h3>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px" id="gnEdit"></div>
+    </div>
+    <!-- 预算 -->
+    <div class="as">
+      <h3>💰 奖池预算（本期 150U · 本群专属，每群独立）</h3>
+      <div class="fob" id="fobAlert">🚨 已超150U！合约抽奖已自动切换为 0.1~0.4U USDT 保底</div>
+      <div class="bg4">
+        <div class="bc"><div class="bv">150U</div><div class="bl">总预算</div></div>
+        <div class="bc"><div class="bv" id="bSent" style="color:#52c41a">0U</div><div class="bl">已发放</div></div>
+        <div class="bc"><div class="bv" id="bLeft" style="color:#1890ff">150U</div><div class="bl">剩余</div></div>
+        <div class="bc"><div class="bv" id="bUsers" style="color:#b37feb">0</div><div class="bl">参与用户</div></div>
+      </div>
+      <div class="bwrap">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#666"><span>预算使用进度</span><span id="bPct">0%</span></div>
+        <div class="btrack"><div class="bfill" id="bFill" style="width:0%"></div></div>
+      </div>
+    </div>
+    <!-- 复制到Lark -->
+    <div class="as" style="background:#060e06;border-color:#1a3020">
+      <h3 style="color:#52c41a">📋 复制到 Lark（按日期）</h3>
+      <div style="font-size:11px;color:#555;margin-bottom:8px">① 点按钮复制 → ② 切到Lark对应sheet → ③ 点第一个空行A列 → ④ Ctrl+V粘贴</div>
+      <div id="syncByDate" style="max-height:240px;overflow-y:auto"><div style="color:#333;font-size:12px;padding:8px">暂无记录</div></div>
+    </div>
+    <!-- 发奖记录 -->
+    <div class="as">
+      <h3>📊 全部发奖记录</h3>
+      <div class="sr">
+        <input type="tel" id="srUID" placeholder="🔍 搜索UID…" maxlength="20" oninput="renderRecs(this.value.trim())"/>
+        <button onclick="renderRecs(document.getElementById('srUID').value.trim())">搜索</button>
+        <button class="clr" onclick="document.getElementById('srUID').value='';renderRecs()">清空</button>
+      </div>
+      <div class="ar">
+        <button class="ab g" onclick="exportData()">📤 导出Excel</button>
+        <button class="ab b"><label style="cursor:pointer">📥 导入复原<input type="file" accept=".json" onchange="handleImp(this)" style="display:none"></label></button>
+        <button class="ab y" onclick="clearUID()">🧹 清除指定UID</button>
+        <button class="ab r" onclick="clearAll()">🗑️ 清除全部</button>
+        <button class="ab" style="background:#1a0a2e;border:1px solid rgba(179,126,235,.5)!important;color:#b37feb" onclick="showRegModal()">📝 手动登记奖励</button>
+      </div>
+      <div id="allRecs"></div>
+    </div>
+  </div>
+  <div class="afoot">
+    <button class="bex" onclick="exportData()">导出Excel</button>
+    <button class="brs" onclick="resetBudget()">重置预算</button>
+    <button class="bcl" onclick="clearAll()">清除记录</button>
+  </div>
+</div>
+
+<!-- 手动登记 Modal -->
+<div id="regModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;align-items:center;justify-content:center">
+  <div style="background:#131929;border:1px solid rgba(179,126,235,.5);border-radius:18px;padding:24px;width:92%;max-width:440px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h3 style="color:#b37feb;font-size:16px">📝 手动登记用户奖励</h3>
+      <button onclick="hideRegModal()" style="background:transparent;border:none;color:#666;font-size:20px;cursor:pointer">×</button>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:16px">
+      <div class="reg-tab active" id="rt0" onclick="switchRegTab(0)">📈 合约晒单</div>
+      <div class="reg-tab" id="rt1" onclick="switchRegTab(1)">🏦 入金</div>
+      <div class="reg-tab" id="rt2" onclick="switchRegTab(2)">📊 现货</div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;color:#aaa;display:block;margin-bottom:5px">用户 UID</label>
+      <input type="tel" id="regUID" placeholder="输入用户UID…" maxlength="20" oninput="regUpdate()"
+        style="width:100%;background:#0d0d1a;border:1px solid #444;border-radius:8px;color:#ffd700;font-size:14px;padding:9px 12px;outline:none;letter-spacing:.5px"/>
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;color:#aaa;display:block;margin-bottom:5px">用户昵称（选填）</label>
+      <input type="text" id="regNick" placeholder="输入OKX昵称…" maxlength="24"
+        style="width:100%;background:#0d0d1a;border:1px solid #444;border-radius:8px;color:#b37feb;font-size:13px;padding:9px 12px;outline:none"/>
+    </div>
+    <div id="regContractFields">
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:#aaa;display:block;margin-bottom:5px">开奖日期</label>
+        <input type="date" id="regDate" style="width:100%;background:#0d0d1a;border:1px solid #444;border-radius:8px;color:#ffd700;font-size:14px;font-weight:600;padding:9px 12px;outline:none;color-scheme:dark" oninput="regUpdate()"/>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:12px;color:#aaa;display:block;margin-bottom:6px">抽奖次数</label>
+        <div style="display:flex;gap:6px">
+          <div class="reg-spin active" id="rs1" onclick="regSetSpin(1)" style="flex:2">
+            <div style="font-size:15px;font-weight:900">1次</div>
+            <div style="font-size:10px;margin-top:2px">合约晒单（普通）</div>
+          </div>
+          <div class="reg-spin" id="rs2" onclick="regSetSpin(2)" style="flex:2">
+            <div style="font-size:15px;font-weight:900">额外 1次</div>
+            <div style="font-size:10px;margin-top:2px">活跃/特殊加场</div>
+          </div>
+          <div class="reg-spin" id="rs3" onclick="regSetSpin(3)" style="flex:1">
+            <div style="font-size:13px;font-weight:900">+2次</div>
+            <div style="font-size:9px;margin-top:2px">特殊</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-bottom:12px">
+      <label style="font-size:12px;color:#aaa;display:block;margin-bottom:5px">晒单截图（选填，Ctrl+V粘贴或点击上传）</label>
+      <div class="paste-zone" id="pasteZone" tabindex="0"
+        onclick="document.getElementById('regShot').click()"
+        ondragover="event.preventDefault();this.classList.add('drag-over')"
+        ondragleave="this.classList.remove('drag-over')"
+        ondrop="handleShotDrop(event)">
+        📋 截图后直接 <b style="color:#b37feb">Ctrl+V / ⌘V</b> 粘贴 &nbsp;·&nbsp; 或点击选择文件
+      </div>
+      <input type="file" id="regShot" accept="image/*" style="display:none" onchange="if(this.files[0])loadShotFile(this.files[0])">
+    </div>
+    <div id="regPreview" style="background:#0d0d1a;border:1px solid #333;border-radius:10px;padding:12px;margin-bottom:12px;min-height:40px;font-size:12px;color:#555">输入UID后自动预览奖品…</div>
+    <div id="regCodeRow" style="display:none;background:#0d0d0d;border:1px solid #443300;border-radius:10px;padding:12px;margin-bottom:12px">
+      <div style="font-size:11px;color:#666;margin-bottom:6px">授权码（私信发给用户）</div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span id="regCodeNum" style="font-size:28px;font-weight:900;color:#ff9500;letter-spacing:8px;font-family:monospace">——</span>
+        <button onclick="regCopyCode()" style="background:transparent;border:1px solid #555;border-radius:6px;padding:5px 12px;color:#888;font-size:11px;cursor:pointer">📋 复制</button>
+      </div>
+      <div style="font-size:10px;color:#555;margin-top:6px">验证后即失效 · 仅该UID可用 · 请勿发群内</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button id="regConfirmBtn" onclick="regConfirm()" style="flex:1;padding:13px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;background:linear-gradient(135deg,#7c3aed,#4f46e5);color:#fff">⚡ 生成并登记</button>
+      <button onclick="hideRegModal()" style="flex:1;padding:13px;border-radius:10px;border:1px solid #333;font-size:14px;font-weight:700;cursor:pointer;background:#1e1e1e;color:#888">取消</button>
+    </div>
+  </div>
+</div>
+
+<!-- 截图查看 -->
+<div id="shotModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.93);z-index:10000;align-items:center;justify-content:center" onclick="this.style.display='none'">
+  <img id="shotImg" style="max-width:95%;max-height:92vh;border-radius:10px;object-fit:contain">
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const P=new URLSearchParams(location.search);
+const GROUP=P.get('g')||'1';
+const ADMIN=P.has('admin');
+const SALT='OKX_G'+GROUP+'_2026';
+const BUDGET=150;
+const SK='okx_g'+GROUP+'_v10';
+const UID_K='okx_uid_g'+GROUP;
+const GNAMES_K='okx_gnames_v1';
+const LARK_WEBHOOK='https://open.larksuite.com/open-apis/bot/v2/hook/1a2df222-e04b-4ced-be2b-2819d936728b';
+
+// ===== PRIZES (原档不变) =====
+const PRIZES=[
+  {id:0,label:'0.1~0.3 USDT',short:'0.1~0.3U',t:'ur',e:'💰',sub:[0.1,0.2,0.3],sw:[500,350,150]},
+  {id:1,label:'0.4~0.6 USDT',short:'0.4~0.6U',t:'ur',e:'💰',sub:[0.4,0.5,0.6],sw:[500,350,150]},
+  {id:2,label:'1 USDT',short:'1 USDT',t:'u',e:'💰',v:1.0},
+  {id:3,label:'2U 体验金',short:'2U体验金',t:'tr',e:'🎁',v:2.0},
+  {id:4,label:'1~2U 手续费补贴',short:'1~2U手续费补贴',t:'rr',e:'🃏',sub:[1,2],sw:[650,350]},
+  {id:5,label:'2 USDT',short:'2 USDT',t:'u',e:'💰',v:2.0},
+  {id:6,label:'3U 手续费补贴',short:'3U手续费补贴',t:'r',e:'🃏',v:3.0},
+  {id:7,label:'4U 体验金',short:'4U体验金',t:'tr',e:'🎁',v:4.0,rare:true},
+];
+const POOL=[450,230,150,30,60,60,15,5];
+const PDEP=[
+  {label:'0.1 USDT',v:0.1,w:400,t:'u',e:'💰'},
+  {label:'0.2 USDT',v:0.2,w:300,t:'u',e:'💰'},
+  {label:'0.5 USDT',v:0.5,w:180,t:'u',e:'💰'},
+  {label:'1U 手续费补贴',v:1.0,w:80,t:'r',e:'🃏'},
+  {label:'2U 体验金',v:2.0,w:30,t:'tr',e:'🎁'},
+  {label:'1 USDT',v:1.0,w:10,t:'u',e:'💰'},
+];
+const PSP=[
+  {label:'0.1 USDT',v:0.1,w:550,t:'u',e:'💰'},
+  {label:'0.2 USDT',v:0.2,w:300,t:'u',e:'💰'},
+  {label:'0.3 USDT',v:0.3,w:120,t:'u',e:'💰'},
+  {label:'1U 手续费补贴',v:1.0,w:25,t:'r',e:'🃏'},
+  {label:'2U 体验金',v:2.0,w:5,t:'tr',e:'🎁'},
+];
+const PFB=[{v:0.1,w:400,cid:0},{v:0.2,w:300,cid:0},{v:0.3,w:200,cid:0},{v:0.4,w:100,cid:1}];
+
+// ===== HASH =====
+function H(s){let h=0x12345678;for(let i=0;i<s.length;i++){let k=s.charCodeAt(i);k=Math.imul(k,0xcc9e2d51);k=(k<<15)|(k>>>17);k=Math.imul(k,0x1b873593);h^=k;h=(h<<13)|(h>>>19);h=(Math.imul(h,5)+0xe6546b64)|0;}h^=h>>>16;h=Math.imul(h,0x85ebca6b);h^=h>>>13;h=Math.imul(h,0xc2b2ae35);h^=h>>>16;return h>>>0;}
+function today(){const d=new Date();return `${d.getFullYear()}_${d.getMonth()+1}_${d.getDate()}`;}
+function yesterday(){const d=new Date();d.setDate(d.getDate()-1);return `${d.getFullYear()}_${d.getMonth()+1}_${d.getDate()}`;}
+
+// ===== CODE SYSTEM =====
+function genCodeForUID(uid,type,date){
+  date=date||today();
+  const h=H(uid+'_'+date+'_'+type+'_'+SALT);
+  if(type==='1S') return String(h%4000).padStart(4,'0');
+  if(type==='2S') return String(4000+(h%3000)).padStart(4,'0');
+  return String(7000+(h%2000)).padStart(4,'0');
+}
+function verifyCode(uid,code){
+  if(!uid||!code||code.length!==4) return {valid:false};
+  const n=parseInt(code);
+  const dates=[today(),yesterday()];
+  for(const date of dates){
+    if(n<4000&&n===parseInt(genCodeForUID(uid,'1S',date))) return {valid:true,date,spins:1,startSpin:1};
+    if(n<7000&&n===parseInt(genCodeForUID(uid,'2S',date))) return {valid:true,date,spins:1,startSpin:2};
+    if(n<9000&&n===parseInt(genCodeForUID(uid,'3S',date))) return {valid:true,date,spins:2,startSpin:2};
+  }
+  return {valid:false};
+}
+
+// ===== PRIZE SELECTION =====
+function isFB(){return getTotalCost()>=BUDGET;}
+function prizeForSpin(uid,spinIdx,date){
+  date=date||today();
+  if(isFB()){const h=H(uid+'_FB'+spinIdx+'_'+date+'_'+SALT);const tot=PFB.reduce((s,p)=>s+p.w,0);let r=h%tot,c=0;for(const p of PFB){c+=p.w;if(r<c)return{cellId:p.cid,label:p.v+' USDT',v:p.v,t:'u',e:'💰',fb:true};};}
+  const tot=POOL.reduce((s,w)=>s+w,0);
+  const h=H(uid+'_PRIZE'+spinIdx+'_'+date+'_'+SALT);
+  let r=h%tot,c=0;
+  for(let i=0;i<POOL.length;i++){c+=POOL[i];if(r<c){const base=PRIZES[i];let v=base.v,label=base.label;if(base.sub){const ih=H(uid+'_SUB'+i+'_SP'+spinIdx+'_'+date+'_'+SALT);const it=base.sw.reduce((s,w)=>s+w,0);let ir=ih%it,ic=0;for(let j=0;j<base.sw.length;j++){ic+=base.sw[j];if(ir<ic){v=base.sub[j];break;}}label=base.t==='ur'?v+' USDT':v+'U 手续费补贴';}return{cellId:i,label,v,t:base.t,e:base.e,rare:base.rare,fb:false};}}
+  return{cellId:0,label:'0.1 USDT',v:0.1,t:'u',e:'💰',fb:false};
+}
+function issuePrize(uid,itype){
+  const pool=itype==='dep'?PDEP:PSP;
+  const h=H(uid+'_'+itype+'_'+(itype==='dep'?'ot':today())+'_'+SALT);
+  const tot=pool.reduce((s,p)=>s+p.w,0);let r=h%tot,c=0;for(const p of pool){c+=p.w;if(r<c)return p;}return pool[pool.length-1];
+}
+
+// ===== STORAGE =====
+function getS(){try{return JSON.parse(localStorage.getItem(SK)||'{}')}catch{return{}}}
+function setS(d){localStorage.setItem(SK,JSON.stringify(d));}
+function getSUID(){return localStorage.getItem(UID_K)||'';}
+function savUID(u){localStorage.setItem(UID_K,u);}
+function getQ(){return getS()._q||[];}
+function addQ(prizes){const s=getS();if(!s._q)s._q=[];prizes.forEach(p=>s._q.push(p));setS(s);}
+function shiftQ(){const s=getS();if(!s._q||!s._q.length)return null;const p=s._q.shift();setS(s);return p;}
+function qLen(){return getQ().length;}
+function usedCodes(){return getS()._uc||{};}
+function markUsed(code,uid,prizes){const s=getS();if(!s._uc)s._uc={};s._uc[code]={ts:Date.now(),uid,prizes:prizes.map(p=>p.label)};setS(s);}
+function isUsed(code){return !!usedCodes()[code];}
+function getAR(){return getS()._ar||{};}
+function isCodeReg(uid,code){const ar=getAR();return ar[uid]&&ar[uid].some(r=>r.code===code);}
+function addAR(uid,code,prizes,type='contract',extra={}){
+  if(code&&isCodeReg(uid,code)) return false;
+  const s=getS();if(!s._ar)s._ar={};if(!s._ar[uid])s._ar[uid]=[];
+  s._ar[uid].push({date:today(),code,prizes:prizes.map(p=>({label:p.label,v:p.v})),type,ts:Date.now(),nickname:extra.nickname||'',screenshot:extra.screenshot||''});
+  setS(s);return true;
+}
+function getIssued(uid,it){const s=getS();const k=uid+'_'+it+(it==='dep'?'_ot':'_'+today());return s._is&&s._is[k]?s._is[k]:null;}
+function setIssued(uid,it,data){const s=getS();if(!s._is)s._is={};const k=uid+'_'+it+(it==='dep'?'_ot':'_'+today());s._is[k]={...data,itype:it,ts:Date.now()};setS(s);}
+function getTotalCost(){let t=0;Object.values(getAR()).forEach(arr=>arr.forEach(r=>{if(r.prizes)r.prizes.forEach(p=>t+=(p.v||0));else if(r.v)t+=r.v;}));const s=getS();if(s._is)Object.values(s._is).forEach(r=>t+=(r.v||0));return Math.round(t*100)/100;}
+
+// ===== GROUP NAMES =====
+function getGroupName(g){try{return JSON.parse(localStorage.getItem(GNAMES_K)||'{}')[String(g)]||'群'+g;}catch{return '群'+g;}}
+function saveGroupName(g,name){try{const n=JSON.parse(localStorage.getItem(GNAMES_K)||'{}');n[String(g)]=name;localStorage.setItem(GNAMES_K,JSON.stringify(n));}catch{}}
+function buildGroupNameEditor(){
+  const el=document.getElementById('gnEdit');if(!el)return;
+  el.innerHTML=Array.from({length:9},(_,i)=>{
+    const g=String(i+1),name=getGroupName(g);
+    return `<div style="display:flex;align-items:center;gap:4px"><span style="font-size:10px;color:#444;min-width:22px">群${g}</span><input value="${name.replace(/"/g,'&quot;')}" placeholder="群${g}名称" maxlength="12" style="flex:1;background:#0d0d0d;border:1px solid #222;border-radius:6px;color:#ccc;font-size:11px;padding:5px 7px;outline:none" oninput="saveGroupName('${g}',this.value);if('${g}'==='${GROUP}')updateGroupLabels()"/></div>`;
+  }).join('');
+}
+function updateGroupLabels(){
+  const gn=getGroupName(GROUP);
+  document.getElementById('adminGrpLbl').textContent=gn;
+  document.getElementById('groupBadge').textContent=gn;
+  document.getElementById('curGrpName').textContent=gn;
+  buildGroupUI();
+}
+
+// ===== GRID =====
+const DOM=[0,1,2,7,'GO',3,6,5,4];
+function buildGrid(){
+  const g=document.getElementById('grid');g.innerHTML='';
+  DOM.forEach(pid=>{
+    if(pid==='GO'){const el=document.createElement('div');el.className='go gd';el.id='goBtn';el.innerHTML='<div class="gs"></div><div class="gt">GO</div>';el.onclick=doSpin;g.appendChild(el);}
+    else{const p=PRIZES[pid],el=document.createElement('div');el.className='pc';el.id='c'+pid;const isT=p.t==='r'||p.t==='rr';const icon=isT?`<div class="ti"><svg viewBox="0 0 16 16"><path d="M1 5a1 1 0 011-1h1a1 1 0 000-2H2a2 2 0 00-2 2v2a1 1 0 001 1 1 1 0 010 2v2a2 2 0 002 2h1a1 1 0 000-2H2a1 1 0 01-1-1v-2a1 1 0 00-1-1zm14-1h-1a1 1 0 000 2h1v2a1 1 0 01-1 1 1 1 0 000 2h1a2 2 0 002-2V6a2 2 0 00-2-2zM5 4h6v8H5z"/></svg></div>`:`<div class="pi">${p.e}</div>`;el.innerHTML=`${p.rare?'<div class="rt">稀有</div>':''}${icon}<div class="pn">${p.short}</div>`;g.appendChild(el);}
+  });
+}
+
+// ===== UI =====
+let spinning=false,_curUID='';
+function setGO(on){document.getElementById('goBtn').classList.toggle('gd',!on);}
+function refreshUI(){
+  const q=qLen();document.getElementById('spinCnt').textContent=q;setGO(q>0&&!spinning);
+  const pill=document.getElementById('spinPill'),pt=document.getElementById('spinPillTxt');
+  if(q>0){pill.style.display='inline-flex';pt.textContent=`已授权 ${q} 次抽奖，点GO开始`;}else pill.style.display='none';
+  document.getElementById('fBanner').style.display=isFB()?'block':'none';
+}
+function onUIDChange(){const uid=document.getElementById('uidIn').value.trim();if(uid.length>=6)savUID(uid);_curUID=uid;}
+function onCodeInput(){const v=document.getElementById('codeIn').value.trim();if(v.length===4)setTimeout(()=>{if(document.getElementById('codeIn').value.trim()===v)doVerify();},400);}
+function doVerify(){
+  const uid=document.getElementById('uidIn').value.trim();
+  const code=document.getElementById('codeIn').value.trim();
+  if(!uid||uid.length<4){toast('请先输入你的UID');return;}
+  if(!code||code.length!==4||!/^\d{4}$/.test(code)){toast('请输入4位授权码');return;}
+  if(isUsed(code)){toast('此授权码已使用过');return;}
+  const vr=verifyCode(uid,code);
+  if(!vr.valid){toast('授权码与UID不匹配，请核查后重试');return;}
+  const prizes=[];
+  for(let i=vr.startSpin;i<vr.startSpin+vr.spins;i++) prizes.push(prizeForSpin(uid,i,vr.date));
+  addQ(prizes);markUsed(code,uid,prizes);
+  document.getElementById('codeIn').value='';_curUID=uid;
+  const msg=vr.spins>1?`✅ 验证成功！获得 ${vr.spins} 次抽奖，请依次点GO`:'✅ 验证成功！点击GO开始抽奖';
+  toast(msg);refreshUI();
+}
+
+// ===== SPIN =====
+const CW=[0,1,2,3,4,5,6,7];
+function clrHL(){CW.forEach(i=>{const e=document.getElementById('c'+i);if(e)e.classList.remove('active','won');});}
+function hlAt(pos){clrHL();const e=document.getElementById('c'+CW[pos%8]);if(e)e.classList.add('active');}
+function spd(s,t){const r=s/t;return r<.4?75:r<.65?140:r<.82?220:330;}
+function doSpin(){
+  if(spinning||qLen()===0)return;
+  const prize=shiftQ();spinning=true;setGO(false);
+  const steps=25+prize.cellId;let step=0;
+  function tick(){hlAt(step);step++;if(step>=steps){setTimeout(()=>{clrHL();const el=document.getElementById('c'+prize.cellId);if(el)el.classList.add('won');spinning=false;refreshUI();setTimeout(()=>showWin(prize),500);},350);return;}setTimeout(tick,spd(step,steps));}tick();
+}
+function showWin(prize){
+  const remaining=qLen();
+  document.getElementById('winE').textContent=prize.e||'🎉';
+  document.getElementById('winP').textContent=prize.label;
+  const types={u:'USDT直发',ur:'USDT直发',tr:'体验金',r:'手续费补贴',rr:'手续费补贴'};
+  document.getElementById('winB').textContent=types[prize.t]||'奖励';
+  const descs={u:'USDT将在3-7个自然日内发放至您的账户',ur:'USDT将在3-7个自然日内发放至您的账户',tr:'体验金将在3-7个自然日内由群主发放',r:'手续费补贴将在3-7个自然日内由群主发放',rr:'手续费补贴将在3-7个自然日内由群主发放'};
+  document.getElementById('winD').textContent=(descs[prize.t]||'')+(prize.fb?' （保底发放）':'');
+  const remEl=document.getElementById('spinRemain'),winBtn=document.getElementById('winBtn');
+  if(remaining>0){remEl.style.display='block';remEl.textContent=`还有 ${remaining} 次机会，继续！`;winBtn.textContent='继续抽下一次 →';}
+  else{remEl.style.display='none';winBtn.textContent='太棒了，收下了！';}
+  document.getElementById('winOv').classList.add('show');
+}
+function closeWin(){document.getElementById('winOv').classList.remove('show');if(qLen()>0)setTimeout(doSpin,400);}
+function closePlay(){document.getElementById('playOv').classList.remove('show');}
+function showRec(){
+  const used=usedCodes();const body=document.getElementById('recBody');
+  const rows=Object.entries(used).sort((a,b)=>b[1].ts-a[1].ts);
+  body.innerHTML=rows.length?rows.map(([code,r])=>`<div class="ri"><div><div class="rp">${(r.prizes||[]).join(' · ')||'—'}</div><div class="rpl">📈 合约晒单 &nbsp; UID:${r.uid||'—'}</div></div><div><div class="rd">码 ${code}</div><div class="rt2">${new Date(r.ts).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})}</div></div></div>`).join(''):'<div class="et">本设备暂无记录</div>';
+  document.getElementById('recPanel').classList.add('show');
+}
+function hideRec(){document.getElementById('recPanel').classList.remove('show');}
+function viewShot(src){document.getElementById('shotImg').src=src;document.getElementById('shotModal').style.display='flex';}
+
+// ===== 截图处理 =====
+let _regScreenshot='';
+async function compressImage(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=e=>{
+      const img=new Image();
+      img.onload=()=>{
+        const canvas=document.createElement('canvas');
+        const maxW=600,maxH=900;let w=img.width,h=img.height;
+        if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+        if(h>maxH){w=Math.round(w*maxH/h);h=maxH;}
+        canvas.width=w;canvas.height=h;
+        canvas.getContext('2d').drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL('image/jpeg',0.65));
+      };
+      img.onerror=reject;img.src=e.target.result;
+    };
+    reader.onerror=reject;reader.readAsDataURL(file);
+  });
+}
+async function loadShotFile(file){
+  if(!file.type.startsWith('image/')){toast('请选择图片文件');return;}
+  try{
+    const dataUrl=await compressImage(file);
+    _regScreenshot=dataUrl;
+    document.getElementById('pasteZone').innerHTML=`<img src="${dataUrl}" style="max-height:80px;border-radius:6px;margin:2px auto;display:block">`;
+  }catch{toast('图片处理失败，请重试');}
+}
+async function handleShotDrop(e){
+  e.preventDefault();e.currentTarget.classList.remove('drag-over');
+  const file=e.dataTransfer.files[0];if(file)await loadShotFile(file);
+}
+document.addEventListener('paste',async function(e){
+  if(document.getElementById('regModal').style.display==='none') return;
+  const items=e.clipboardData&&e.clipboardData.items;if(!items)return;
+  for(const item of items){
+    if(item.type.startsWith('image/')){
+      e.preventDefault();const file=item.getAsFile();if(file)await loadShotFile(file);return;
+    }
+  }
+});
+
+// ===== 手动登记 Modal =====
+let _regTab=0,_regSpins=1,_regCode='',_regPrizes=[];
+function showRegModal(){
+  _regTab=0;_regSpins=1;_regCode='';_regPrizes=[];_regScreenshot='';
+  document.getElementById('regUID').value='';
+  document.getElementById('regNick').value='';
+  document.getElementById('regDate').value=new Date().toISOString().slice(0,10);
+  document.getElementById('regPreview').textContent='输入UID后自动预览奖品…';
+  document.getElementById('regPreview').style.color='#555';
+  document.getElementById('regCodeRow').style.display='none';
+  document.getElementById('regConfirmBtn').textContent='⚡ 生成并登记';
+  document.getElementById('pasteZone').innerHTML='📋 截图后直接 <b style="color:#b37feb">Ctrl+V / ⌘V</b> 粘贴 &nbsp;·&nbsp; 或点击选择文件';
+  switchRegTab(0);[1,2,3].forEach(i=>document.getElementById('rs'+i).className='reg-spin'+(i===1?' active':''));
+  document.getElementById('regModal').style.display='flex';
+}
+function hideRegModal(){document.getElementById('regModal').style.display='none';}
+function switchRegTab(t){
+  _regTab=t;[0,1,2].forEach(i=>document.getElementById('rt'+i).className='reg-tab'+(i===t?' active':''));
+  document.getElementById('regContractFields').style.display=t===0?'block':'none';
+  document.getElementById('regConfirmBtn').textContent=t===0?'⚡ 生成并登记':'✅ 确认发放';
+  regUpdate();
+}
+function regSetSpin(n){_regSpins=n;[1,2,3].forEach(i=>document.getElementById('rs'+i).className='reg-spin'+(i===n?' active':''));regUpdate();}
+function regUpdate(){
+  const uid=document.getElementById('regUID').value.trim();
+  const prev=document.getElementById('regPreview'),codeRow=document.getElementById('regCodeRow');
+  if(!uid||uid.length<4){prev.textContent='输入UID后自动预览奖品…';prev.style.color='#555';codeRow.style.display='none';return;}
+  if(_regTab===0){
+    const dv=document.getElementById('regDate').value;
+    const date=dv?(()=>{const d=new Date(dv);return `${d.getFullYear()}_${d.getMonth()+1}_${d.getDate()}`;})():today();
+    const typeMap={1:'1S',2:'2S',3:'3S'};
+    _regCode=genCodeForUID(uid,typeMap[_regSpins],date);
+    const startSpin=_regSpins===1?1:2;const spinCount=_regSpins===3?2:1;
+    _regPrizes=[];for(let i=startSpin;i<startSpin+spinCount;i++)_regPrizes.push(prizeForSpin(uid,i,date));
+    prev.innerHTML=_regPrizes.map((p,i)=>`<div style="display:flex;align-items:center;gap:6px;padding:4px 0;border-bottom:.5px solid #1e1e1e"><span style="background:rgba(16,185,129,.15);color:#10b981;border-radius:20px;padding:1px 7px;font-size:10px">第${i+1}次</span><span>${p.e}</span><span style="color:#ffd700;font-weight:500">${p.label}</span></div>`).join('');
+    prev.style.color='';document.getElementById('regCodeNum').textContent=_regCode;codeRow.style.display='block';
+  } else {
+    codeRow.style.display='none';
+    const it=_regTab===1?'dep':'sp';const ex=getIssued(uid,it);
+    if(ex){prev.innerHTML=`<span style="color:#52c41a">✅ 已发放：${ex.label}</span>`;prev.style.color='';}
+    else{const p=issuePrize(uid,it);_regPrizes=[p];prev.innerHTML=`<span style="color:#ffd700">${p.e} ${p.label}</span>`;prev.style.color='';}
+  }
+}
+function regCopyCode(){if(!_regCode)return;navigator.clipboard.writeText(_regCode).then(()=>toast(`✅ 授权码 ${_regCode} 已复制！私信发给用户`)).catch(()=>toast(`授权码：${_regCode}`));}
+function regConfirm(){
+  const uid=document.getElementById('regUID').value.trim();
+  const nick=document.getElementById('regNick').value.trim();
+  if(!uid||uid.length<4){toast('请先输入用户UID');return;}
+  if(_regTab===0){
+    if(!_regCode||!_regPrizes.length){toast('请先等待奖品预览生成');return;}
+    const ok=addAR(uid,_regCode,_regPrizes,'contract',{nickname:nick,screenshot:_regScreenshot});
+    if(!ok){toast(`⚠️ 此授权码已为 UID ${uid} 登记过`);return;}
+    renderRecs();
+    notifyLark(uid,nick,_regPrizes,getGroupName(GROUP),today());
+    toast(`✅ 已登记：${uid} → 码 ${_regCode}`);
+    setTimeout(hideRegModal,800);
+  } else {
+    const it=_regTab===1?'dep':'sp';
+    if(getIssued(uid,it)){toast('该用户已领取，请勿重复发放');return;}
+    const prize=issuePrize(uid,it);
+    setIssued(uid,it,{label:prize.label,v:prize.v,type:prize.t});
+    const s=getS();if(!s._ar)s._ar={};if(!s._ar[uid])s._ar[uid]=[];
+    s._ar[uid].push({date:today(),prizes:[{label:prize.label,v:prize.v}],type:it,ts:Date.now(),nickname:nick,screenshot:_regScreenshot});
+    setS(s);renderRecs();
+    notifyLark(uid,nick,[prize],getGroupName(GROUP),today());
+    toast(`✅ 已记录：${uid} → ${prize.label}`);
+    setTimeout(hideRegModal,800);
+  }
+}
+
+// ===== LARK WEBHOOK =====
+// 先用标准CORS请求（GitHub Pages部署后生效），失败自动降级 no-cors（本地文件也能发出）
+function notifyLark(uid,nickname,prizes,gname,dk){
+  const prizeText=prizes.map(p=>p.label).join(' + ');
+  const dSlash=dk.replace(/_/g,'/');
+  const time=new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
+  const text=`🎉 新中奖记录\n🏢 群组：${gname}\n👤 昵称：${nickname||'(未填写)'}\n🆔 UID：${uid}\n🏆 奖品：${prizeText}\n📅 ${dSlash} ${time}`;
+  const payload=JSON.stringify({msg_type:'text',content:{text}});
+  fetch(LARK_WEBHOOK,{method:'POST',headers:{'Content-Type':'application/json'},body:payload})
+    .catch(()=>fetch(LARK_WEBHOOK,{method:'POST',mode:'no-cors',body:payload}).catch(()=>{}));
+}
+
+// ===== LARK SYNC (按日期复制) =====
+function dkCN(dk){const p=dk.split('_');return `${p[0]}年${p[1]}月${p[2]}日`;}
+
+function buildLarkRow(type,r,uid,gname){
+  const dk=r.date||today();
+  const dSlash=dk.replace(/_/g,'/');
+  const dCN=dkCN(dk);
+  if(type==='u'){
+    const total=(r.prizes||[]).filter(p=>!p.label.includes('体验金')&&!p.label.includes('手续费补贴')).reduce((s,p)=>s+(p.v||0),0);
+    return [dSlash,'杨佳佳',r.nickname||'','',uid,'',gname,total%1===0?total:total.toFixed(1),'打卡福利',''].join('\t');
+  } else if(type==='t'){
+    const v=(r.prizes||[]).filter(p=>p.label.includes('体验金')).reduce((s,p)=>s+(p.v||0),0);
+    return [gname,dSlash,uid,v,'10','杨佳佳','社群福利','4组',''].join('\t');
+  } else if(type==='r'){
+    const v=(r.prizes||[]).filter(p=>p.label.includes('手续费补贴')).reduce((s,p)=>s+(p.v||0),0);
+    return [dCN,gname,uid,'杨佳佳','4组','/','/',v,'7','社群福利'].join('\t');
+  }
+  return '';
+}
+
+function renderSyncByDate(){
+  const el=document.getElementById('syncByDate');if(!el)return;
+  const ar=getAR();
+  const byDate={};
+  Object.entries(ar).forEach(([uid,arr])=>{
+    (arr||[]).forEach(r=>{const dk=r.date||today();if(!byDate[dk])byDate[dk]=[];byDate[dk].push({uid,...r});});
+  });
+  const dates=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
+  if(!dates.length){el.innerHTML='<div style="color:#333;font-size:12px;padding:8px">暂无记录</div>';return;}
+  el.innerHTML=dates.map(dk=>{
+    const recs=byDate[dk];
+    const dLabel=dk.replace(/_/g,'/');
+    const uCnt=recs.filter(r=>{const ls=(r.prizes||[]).map(p=>p.label).join('');return !ls.includes('体验金')&&!ls.includes('手续费补贴');}).length;
+    const tCnt=recs.filter(r=>(r.prizes||[]).some(p=>p.label.includes('体验金'))).length;
+    const rCnt=recs.filter(r=>(r.prizes||[]).some(p=>p.label.includes('手续费补贴'))).length;
+    const uBtn=uCnt?`<button class="sb su" onclick="copyLark('${dk}','u')">USDT ×${uCnt}</button>`:'';
+    const tBtn=tCnt?`<button class="sb st" onclick="copyLark('${dk}','t')">体验金 ×${tCnt}</button>`:'';
+    const rBtn=rCnt?`<button class="sb sr2" onclick="copyLark('${dk}','r')">返佣卡 ×${rCnt}</button>`:'';
+    return `<div class="sync-row"><span class="sync-dl">📅 ${dLabel}</span><span class="sync-dc">${recs.length}条</span><div class="sync-acts">${uBtn}${tBtn}${rBtn}</div></div>`;
+  }).join('');
+}
+
+function copyLark(dk,type){
+  const ar=getAR();const gname=getGroupName(GROUP);
+  const recs=[];
+  Object.entries(ar).forEach(([uid,arr])=>{(arr||[]).filter(r=>r.date===dk).forEach(r=>recs.push({uid,...r}));});
+  recs.sort((a,b)=>(a.ts||0)-(b.ts||0));
+  const typeFilter={u:r=>{const ls=(r.prizes||[]).map(p=>p.label).join('');return !ls.includes('体验金')&&!ls.includes('手续费补贴');},t:r=>(r.prizes||[]).some(p=>p.label.includes('体验金')),r:r=>(r.prizes||[]).some(p=>p.label.includes('手续费补贴'))};
+  const filtered=recs.filter(typeFilter[type]);
+  if(!filtered.length){toast('该日期无此类型记录');return;}
+  const rows=filtered.map(r=>buildLarkRow(type,r,r.uid,gname));
+  const typeNames={u:'USDT',t:'体验金',r:'返佣卡'};
+  navigator.clipboard.writeText(rows.join('\n')).then(()=>{
+    toast(`✅ 已复制 ${rows.length} 条${typeNames[type]}记录 → 切Lark「${typeNames[type]}」sheet粘贴`);
+    document.querySelectorAll('#syncByDate .sb').forEach(b=>{if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes(`'${dk}','${type}'`)){b.classList.add('copied');setTimeout(()=>b.classList.remove('copied'),2000);}});
+  }).catch(()=>toast('❌ 复制失败，请允许剪贴板权限'));
+}
+
+function copyOneRec(uid,ts){
+  const ar=getAR();const gname=getGroupName(GROUP);
+  const arr=ar[uid];if(!arr)return;
+  const r=arr.find(rec=>rec.ts==ts);if(!r){toast('记录不存在');return;}
+  const labels=(r.prizes||[]).map(p=>p.label).join('');
+  let type,sheetName;
+  if(labels.includes('手续费补贴')){type='r';sheetName='返佣卡';}
+  else if(labels.includes('体验金')){type='t';sheetName='体验金';}
+  else{type='u';sheetName='USDT';}
+  const row=buildLarkRow(type,r,uid,gname);
+  navigator.clipboard.writeText(row).then(()=>toast(`✅ 已复制 → 切Lark「${sheetName}」sheet，点第一个空行A列粘贴`)).catch(()=>toast('❌ 复制失败，请允许剪贴板权限'));
+}
+
+// ===== ADMIN RECORDS =====
+function renderRecs(filter=''){
+  renderSyncByDate();
+  const ar=getAR();updateBudget();
+  const uids=Object.keys(ar).filter(u=>!filter||u.includes(filter));
+  const container=document.getElementById('allRecs');
+  if(!uids.length){container.innerHTML='<div class="no-recs">暂无记录</div>';return;}
+  container.innerHTML=`<div class="uc-grid">${uids.map(uid=>{
+    const arr=ar[uid];
+    const totalV=arr.reduce((s,r)=>(s+(r.prizes||[]).reduce((a,p)=>a+(p.v||0),0)),0);
+    const days=new Set(arr.map(r=>r.date)).size;
+    const latestNick=arr.slice().sort((a,b)=>b.ts-a.ts).find(r=>r.nickname)?.nickname||'';
+    const recs=arr.slice().sort((a,b)=>b.ts-a.ts).map(r=>{
+      const it=r.type;const isDep=it==='dep',isSp=it==='sp';
+      const cls=isDep?'dep':isSp?'sp2':'';
+      const pl=isDep?'🏦入金':isSp?'📊现货':'📈合约晒单';
+      const prizeText=(r.prizes||[]).map(p=>p.label).join(' + ');
+      const spins=r.prizes?r.prizes.length:1;
+      const copyBtn=`<button class="rc-btn" onclick="copyOneRec('${uid}',${r.ts})" title="复制到Lark">📋</button>`;
+      const shotHtml=r.screenshot?`<img src="${r.screenshot}" class="uc-shot" onclick="viewShot(this.src)" title="点击查看大图"/>`:'';
+      return `<div class="uc-rec ${cls}"><div class="uc-r1"><span class="uc-prize">${prizeText||'—'}</span>${copyBtn}<span class="uc-time">${r.ts?new Date(r.ts).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}):''}</span></div><div class="uc-meta2"><span>${(r.date||'').replace(/_/g,'/')}</span><span>${pl}</span>${spins>1?`<span style="color:#10b981">×${spins}次</span>`:''}${r.code?`<span style="font-family:monospace">码:${r.code}</span>`:''}</div>${shotHtml}</div>`;
+    }).join('');
+    return `<div class="uc"><div class="uc-uid">UID: ${uid}</div>${latestNick?`<div class="uc-nick">👤 ${latestNick}</div>`:''}<div class="uc-meta">共 ${days} 天 · ${totalV.toFixed(1)}U+</div>${recs}</div>`;
+  }).join('')}</div>`;
+}
+
+function updateBudget(){
+  const cost=getTotalCost(),pct=Math.min(100,Math.round(cost/BUDGET*100)),left=Math.max(0,BUDGET-cost);
+  document.getElementById('bSent').textContent=cost.toFixed(1)+'U';
+  document.getElementById('bLeft').textContent=left.toFixed(1)+'U';
+  document.getElementById('bUsers').textContent=Object.keys(getAR()).length;
+  document.getElementById('bPct').textContent=pct+'%';
+  const fill=document.getElementById('bFill');fill.style.width=pct+'%';fill.className='bfill'+(isFB()?' over':'');
+  document.getElementById('fobAlert').style.display=isFB()?'block':'none';
+}
+
+// ===== GROUP UI =====
+function buildGroupUI(){
+  const base=location.href.split('?')[0];
+  const gname=getGroupName(GROUP);
+  document.getElementById('curGrpName').textContent=gname;
+  document.getElementById('groupBadge').textContent=gname;
+  document.getElementById('adminGrpLbl').textContent=gname;
+  const sw=document.getElementById('gSw');
+  if(sw)sw.innerHTML=Array.from({length:9},(_,i)=>{const g=String(i+1);return `<div class="gc ${g===GROUP?'a':''}" onclick="location.href='${base}?g=${g}&admin'">${getGroupName(g)}</div>`;}).join('');
+  const ug=document.getElementById('urlG');
+  if(ug)ug.innerHTML=Array.from({length:9},(_,i)=>{const g=String(i+1),gn=getGroupName(g),isC=g===GROUP;return `<span style="color:${isC?'#ffd700':'#555'}">${isC?'▶ ':'　 '}${gn}用户：${base}?g=${g}&nbsp;&nbsp;${gn}管理员：${base}?g=${g}&admin</span><br>`;}).join('');
+  const gb=document.getElementById('gBtns');
+  if(gb)gb.innerHTML=Array.from({length:9},(_,i)=>{const g=String(i+1),gn=getGroupName(g);return g===GROUP?`<span style="padding:5px 12px;border-radius:6px;font-size:11px;background:#1e1e1e;color:#555;border:1px solid #2a2a2a">当前：${gn}</span>`:`<button onclick="location.href='${base}?g=${g}&admin'" style="padding:5px 12px;border-radius:6px;font-size:11px;background:rgba(24,144,255,.12);color:#1890ff;border:1px solid rgba(24,144,255,.3);cursor:pointer">切换到 ${gn}</button>`;}).join(' ');
+}
+
+// ===== EXPORT xlsx =====
+async function exportData(){
+  if(typeof XLSX==='undefined'){
+    await new Promise((resolve,reject)=>{
+      const s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+      s.onload=resolve;s.onerror=reject;document.head.appendChild(s);
+    });
+  }
+  const ar=getAR();const gname=getGroupName(GROUP);
+  const rows=[['UID','昵称','日期','奖品','金额(U)','活动类型','时间','授权码']];
+  Object.entries(ar).forEach(([uid,arr])=>{
+    arr.forEach(r=>{
+      const prizeText=(r.prizes||[]).map(p=>p.label).join('+');
+      const totalV=(r.prizes||[]).reduce((s,p)=>s+(p.v||0),0);
+      const types={contract:'合约晒单',dep:'入金宝',sp:'现货'};
+      const time=r.ts?new Date(r.ts).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+      rows.push([uid,r.nickname||'',(r.date||'').replace(/_/g,'/'),prizeText,totalV,types[r.type]||r.type,time,r.code||'']);
+    });
+  });
+  const wb=XLSX.utils.book_new();
+  const ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:20},{wch:16},{wch:12},{wch:28},{wch:8},{wch:10},{wch:14},{wch:8}];
+  XLSX.utils.book_append_sheet(wb,ws,'发奖记录');
+  const fname=`OKX_${gname}_发奖记录_${today().replace(/_/g,'')}.xlsx`;
+  XLSX.writeFile(wb,fname);
+  toast(`✅ 已导出：${fname}`);
+}
+
+function handleImp(input){const f=input.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{setS({...getS(),...JSON.parse(e.target.result)});renderRecs();toast('✅ 导入成功');}catch{toast('❌ 格式错误');}input.value='';};r.readAsText(f);}
+function resetBudget(){if(prompt('重置将清除所有记录，输入 RESET 确认')==='RESET'){localStorage.removeItem(SK);if(ADMIN)renderRecs();toast('✅ 已重置');}}
+function clearUID(){const uid=prompt('输入要清除的用户UID：');if(!uid)return;const s=getS();if(s._ar&&s._ar[uid]){delete s._ar[uid];setS(s);renderRecs();toast(`✅ 已清除 ${uid}`);}else toast('未找到该UID');}
+function clearAll(){if(prompt('清除所有记录，输入 CLEAR 确认')==='CLEAR'){localStorage.removeItem(SK);if(ADMIN)renderRecs();toast('✅ 已清除');}}
+let tT;function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(tT);tT=setTimeout(()=>el.classList.remove('show'),2800);}
+
+// ===== INIT =====
+buildGrid();buildGroupUI();buildGroupNameEditor();
+if(isFB())document.getElementById('fBanner').style.display='block';
+const savedUID=getSUID();if(savedUID){document.getElementById('uidIn').value=savedUID;_curUID=savedUID;}
+refreshUI();
+if(ADMIN){document.getElementById('userPage').style.display='none';document.getElementById('adminPanel').classList.add('show');renderRecs();}
+</script>
+</body>
+</html>
